@@ -1,5 +1,7 @@
 <?php
 session_start();
+include("../include/auth.php");
+require_login("doctor", "../doctorlogin.php");
  
 ?>
 <!DOCTYPE html>

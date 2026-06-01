@@ -1,5 +1,7 @@
 <?php
 session_start();
+include("../include/auth.php");
+require_login("admin", "../adminLogin.php");
 ?>
 
 
@@ -72,7 +74,7 @@ session_start();
                                             <h5 class="text-white">Doctor</h5>
                                         </div>
                                         <div class="col-md-3">
-                                            <a href="Doctor.php"><i class="fa fa-user-md fa-3x my- 4" style="color: black;"></i></a>
+                                            <a href="doctor.php"><i class="fa fa-user-md fa-3x my- 4" style="color: black;"></i></a>
 
                                         </div>
                                     </div>
@@ -105,6 +107,24 @@ session_start();
 
 
                             </div>
+                            <div class="col-md-3 bg-info mx-2 my-2" style="height: 130px;">
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-9">
+                                            <?php
+                                            $appointments = mysqli_query($connect,"SELECT * FROM appointment WHERE status='Pending'");
+                                            $appointmentCount = mysqli_num_rows($appointments);
+                                            ?>
+                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo $appointmentCount; ?></h5>
+                                            <h5 class="text-white">Pending</h5>
+                                            <h5 class="text-white">Appointments</h5>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="appointment.php"><i class="fa fa-calendar-check fa-3x my- 4" style="color: black;"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-md-3 bg-warning mx-2 my-2" style="height: 130px;">
                                 <div class="col-md-12">
                                     <div class="row">
@@ -136,7 +156,7 @@ session_start();
                                         <div class="col-md-9">
                                             <?php
 
-                                            $job = mysqli_query($connect,"SELECT * FROM doctors WHERE status='pendding'");
+                                            $job = mysqli_query($connect,"SELECT * FROM doctors WHERE status='Pending'");
                                             $num1 = mysqli_num_rows($job);
 
                                             ?>

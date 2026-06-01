@@ -1,7 +1,9 @@
 <?php
 session_start();
+include("../include/auth.php");
+require_login("patient", "../patientlogin.php");
 ?>
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -30,21 +32,14 @@ session_start();
             
             
                 $pat = $_SESSION['patient'];
-                $query = "SELECT * FROM patient WHERE username = '$pat'";
-
-                $res = mysqli_query($connect,$query);
-                $row = mysqli_fetch_array($res);
-
-                $fname = $row['firstname'];
-                $querys = mysqli_query($connect,"SELECT * FROM income WHERE patient ='$fname'");
-                $output = "";
+                $res = mysqli_query($connect,"SELECT * FROM income WHERE patient_username ='$pat' ORDER BY date_discharge DESC");
                 echo "<table class='table table-bordered'>
                             <tr>
                                 <td>ID</td>
                                 <td>Doctor</td>
                                 <td>Patient</td>
                                 <td>Date of discharge</td>
-                                <td>Ammount Paid</td>
+                                <td>Amount Paid</td>
                                 <td>Description</td>
                                 <td>Action</td>
                                 
@@ -58,14 +53,14 @@ session_start();
 
                     while ($row = mysqli_fetch_array($res)) {
                         echo "<tr>
-                                <td>".$row['id']."</td>
-                                <td>".$row['doctor']."</td>
-                                <td>".$row['patient']."</td>
-                                <td>".$row['date_discharge']."</td>
-                                <td>".$row['amount_paid']."</td>
-                                <td>".$row['description']."</td>
+                                <td>".e($row['id'])."</td>
+                                <td>".e($row['doctor'])."</td>
+                                <td>".e($row['patient'])."</td>
+                                <td>".e($row['date_discharge'])."</td>
+                                <td>".e($row['amount_paid'])."</td>
+                                <td>".e($row['description'])."</td>
                                 <td>
-                        <a href='check.php?id=".$row['id']."'>
+                        <a href='view.php?id=".e($row['id'])."'>
                         <button class='btn btn-info'>View</button>
 
                         </a>

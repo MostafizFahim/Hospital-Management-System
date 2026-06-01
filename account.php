@@ -3,15 +3,15 @@
 
  if(isset($_POST['create'])){
 
- 	$fname = $_POST['fname'];
- 	$sname = $_POST['sname'];
- 	$uname = $_POST['uname'];
- 	$email = $_POST['email'];
- 	$phone = $_POST['phone'];
- 	$gender = $_POST['gender'];
- 	$country = $_POST['country'];
- 	$password = $_POST['pass'];
- 	$con_pass = $_POST['con_pass'];
+ 	$fname = trim($_POST['fname'] ?? '');
+ 	$sname = trim($_POST['sname'] ?? '');
+ 	$uname = trim($_POST['uname'] ?? '');
+ 	$email = trim($_POST['email'] ?? '');
+ 	$phone = trim($_POST['phone'] ?? '');
+ 	$gender = trim($_POST['gender'] ?? '');
+ 	$country = trim($_POST['country'] ?? '');
+ 	$password = $_POST['pass'] ?? '';
+ 	$con_pass = $_POST['con_pass'] ?? '';
 
  	$error = array();
 
@@ -23,6 +23,8 @@
  		$error['ac'] = "Enter Username";
  	}else if(empty($email)){
  		$error['ac'] = "Enter Email";
+ 	}else if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+ 		$error['ac'] = "Enter a valid Email";
  	}else if(empty($phone)){
  		$error['ac'] = "Enter Phone No";
  	}else if($gender == ""){
@@ -36,16 +38,30 @@
  	}
 
  	if(count($error)==0){
- 		$query = "INSERT INTO patient(firstname, surname, username, email, phone, gender, country, password, date_reg, profile) VALUES('$fname','$sname','$uname','$email','$phone','$gender','$country','$password', NOW(),'patient.jpg')";
- 		$res = mysqli_query($connect,$query);
+		$exists = db_select_one("SELECT id FROM patient WHERE username = ? OR email = ? LIMIT 1", "ss", $uname, $email);
+		if ($exists) {
+			$error['ac'] = "Username or email already exists";
+		}
+	}
+
+ 	if(count($error)==0){
+		$password_hash = hash_user_password($password);
+ 		$res = db_execute("INSERT INTO patient(firstname, surname, username, email, phone, gender, country, password, date_reg, profile) VALUES(?,?,?,?,?,?,?,?,NOW(),'patient.jpg')", "ssssssss", $fname, $sname, $uname, $email, $phone, $gender, $country, $password_hash);
 
  		if($res){
- 			header("Location:patientlogin");
+ 			header("Location:patientlogin.php");
+			exit();
  		}else{
  			echo "<script>alert('failed')</script>";
  		}
  	}
 
+ }
+
+ if (isset($error['ac'])) {
+ 	$show = "<h5 class='text-center alert alert-danger'>" . e($error['ac']) . "</h5>";
+ } else {
+ 	$show = "";
  }
 ?>
 <!DOCTYPE html>
@@ -67,6 +83,7 @@
 				<div class="col-md-3"></div>
 				<div class="col-md-6 my-2 card">
 					<h5 class="text-center text-info my-2">Create Account</h5>
+					<?php echo $show; ?>
 					<form method="post">
 						<div class="form-group">
 							<label>Firstname</label>
@@ -117,7 +134,7 @@
 							
 						</div>
 						<input type="submit" name="create" value="Create Account" class="btn btn-info">
-						<p>I already have an account <a href="patientLogin.php">Click Here</a></p>
+						<p>I already have an account <a href="patientlogin.php">Click Here</a></p>
 					</form>
 					
 				</div>

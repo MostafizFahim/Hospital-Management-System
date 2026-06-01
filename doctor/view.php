@@ -1,5 +1,7 @@
 <?php
 session_start();
+include("../include/auth.php");
+require_login("doctor", "../doctorlogin.php");
 ?>
 
 <!DOCTYPE html>
@@ -39,9 +41,9 @@ session_start();
 				<div class="col-md-6">
 					<?php
 						if(isset($_GET['id'])){
-							$id = $_GET['id'];
+							$id = (int) $_GET['id'];
 
-							$query ="SELECT * FROM patient WHERE id='$id'";
+							$query ="SELECT * FROM patient WHERE id=$id";
 
 							$res = mysqli_query($connect,$query);
 
@@ -54,7 +56,7 @@ session_start();
 							<div class="col-md-3"></div>
 							<div class="col-md-10">
 								<?php
-								echo "<img src='../patient/img/".$row['profile']." 'class='col-md-12 my-2'
+								echo "<img src='../patient/img/".e($row['profile'])." 'class='col-md-12 my-2'
 								height='250px;'>";
 								?>
 								<table class="table table-bordered">
@@ -63,35 +65,35 @@ session_start();
 									</tr>
 									<tr>
 										<td>Firstname</td>
-										<td><?php echo $row['firstname']; ?></td>
+										<td><?php echo e($row['firstname']); ?></td>
 									</tr>
 									<tr>
 										<td>Surename</td>
-										<td><?php echo $row['surname']; ?></td>
+										<td><?php echo e($row['surname']); ?></td>
 									</tr>
 									<tr>
 										<td>Username</td>
-										<td><?php echo $row['username']; ?></td>
+										<td><?php echo e($row['username']); ?></td>
 									</tr>
 									<tr>
 										<td>Email</td>
-										<td><?php echo $row['email']; ?></td>
+										<td><?php echo e($row['email']); ?></td>
 									</tr>
 									<tr>
 										<td>Phone</td>
-										<td><?php echo $row['phone']; ?></td>
+										<td><?php echo e($row['phone']); ?></td>
 									</tr>
 									<tr>
 										<td>Gender</td>
-										<td><?php echo $row['gender']; ?></td>
+										<td><?php echo e($row['gender']); ?></td>
 									</tr>
 									<tr>
 										<td>Country</td>
-										<td><?php echo $row['country']; ?></td>
+										<td><?php echo e($row['country']); ?></td>
 									</tr>
 									<tr>
 										<td>Date Registered</td>
-										<td><?php echo $row['date_reg']; ?></td>
+										<td><?php echo e($row['date_reg']); ?></td>
 									</tr>
 								</table>
 							</div>

@@ -1,5 +1,7 @@
 <?php
 session_start();
+include("../include/auth.php");
+require_login("admin", "../adminLogin.php");
 ?>
 <!DOCTYPE html>
 <html>
@@ -72,18 +74,18 @@ if (mysqli_num_rows($res) < 1){
  while($row = mysqli_fetch_array($res)){
     $output .="
         <tr>
-        <td>".$row['id']."</td>
-        <td>".$row['firstname']."</td>
-        <td>".$row['surname']."</td>
-        <td>".$row['username']."</td>
+        <td>".e($row['id'])."</td>
+        <td>".e($row['firstname'])."</td>
+        <td>".e($row['surname'])."</td>
+        <td>".e($row['username'])."</td>
         
-        <td>".$row['gender']."</td>
-        <td>".$row['phone']."</td>
-        <td>".$row['country']."</td>
-        <td>".$row['salary']."</td>
-        <td>".$row['data_reg']."</td>
+        <td>".e($row['gender'])."</td>
+        <td>".e($row['phone'])."</td>
+        <td>".e($row['country'])."</td>
+        <td>".e($row['salary'])."</td>
+        <td>".e($row['data_reg'])."</td>
         <td>
-            <a href='edit.php?id=".$row['id']."'>
+            <a href='edit.php?id=".e($row['id'])."'>
 
            <button class='btn btn-info'>Edit</button>
 

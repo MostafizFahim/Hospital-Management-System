@@ -1,11 +1,4 @@
 <?php 
-session_start();
-
-
-if(isset($_SESSION['doctor'])){
-	unset($_SESSION['doctor']);
-
-	header("Location: ../index.php");
-}
-
+include("../include/auth.php");
+logout_user("../index.php");
 ?>

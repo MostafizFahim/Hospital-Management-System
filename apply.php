@@ -2,15 +2,15 @@
 include("include/connection.php");
 
 if(isset($_POST['apply'])){
-	$firstname = $_POST['fname'];
-	$surname = $_POST['sname'];
-	$username = $_POST['uname'];
-	$email = $_POST['email'];
-	$gender = $_POST['gender'];
-	$phone = $_POST['phone'];
-	$country = $_POST['country'];
-	$password = $_POST['pass'];
-	$confirm_password = $_POST['con_pass'];
+	$firstname = trim($_POST['fname'] ?? '');
+	$surname = trim($_POST['sname'] ?? '');
+	$username = trim($_POST['uname'] ?? '');
+	$email = trim($_POST['email'] ?? '');
+	$gender = trim($_POST['gender'] ?? '');
+	$phone = trim($_POST['phone'] ?? '');
+	$country = trim($_POST['country'] ?? '');
+	$password = $_POST['pass'] ?? '';
+	$confirm_password = $_POST['con_pass'] ?? '';
 
 	$error = array();
 
@@ -23,6 +23,8 @@ if(isset($_POST['apply'])){
 		$error['apply'] = "Enter Username";
 	}elseif (empty($email)) {
 		$error['apply'] = "Enter Email Address";
+	}elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$error['apply'] = "Enter a valid Email Address";
 	}elseif ($gender == "") {
 		$error['apply'] = "Select your Gender";
 	}elseif (empty($phone)) {
@@ -36,12 +38,20 @@ if(isset($_POST['apply'])){
 	}
 
 	if(count($error)==0){
-		$query = "INSERT INTO doctors(firstname, surname, username, email, gender, phone, country, password, salary, data_reg, status, profile) VALUES('$firstname','$surname','$username','$email','$gender','$phone','$country','$password','0',NOW(),'Pendding','doctor.jpg')";
+		$exists = db_select_one("SELECT id FROM doctors WHERE username = ? OR email = ? LIMIT 1", "ss", $username, $email);
+		if ($exists) {
+			$error['apply'] = "Username or email already exists";
+		}
+	}
+
+	if(count($error)==0){
+		$password_hash = hash_user_password($password);
+		$query = "INSERT INTO doctors(firstname, surname, username, email, gender, phone, country, password, salary, data_reg, status, profile) VALUES('$firstname','$surname','$username','$email','$gender','$phone','$country','$password_hash','0',NOW(),'Pending','doctor.jpg')";
 
 		$result = mysqli_query($connect, $query);
 		if ($result) {
-			echo "<script>alert('You have Successfully Applied')</script>";
 			header("Location:doctorlogin.php");
+			exit();
 		}else{
 			echo "<script>alert('Failed')</script>";
 			

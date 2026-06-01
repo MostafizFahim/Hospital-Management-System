@@ -1,6 +1,71 @@
 <?php
 session_start();
-error_reporting(0);
+include("../include/auth.php");
+require_login("doctor", "../doctorlogin.php");
+include("../include/connection.php");
+
+$doc = $_SESSION['doctor'];
+$error = array();
+$success = "";
+
+if (isset($_POST['update'])) {
+    $imageError = '';
+    $newProfile = save_uploaded_image($_FILES['profile'] ?? null, 'img', $imageError);
+
+    if (!$newProfile) {
+        $error['profile'] = $imageError ?: "Add Profile Picture";
+    } else {
+        db_execute("UPDATE doctors SET profile = ? WHERE username = ?", "ss", $newProfile, $doc);
+        $success = "Profile picture updated successfully";
+    }
+}
+
+if (isset($_POST['change'])) {
+    $uname = trim($_POST['uname'] ?? '');
+
+    if ($uname === '') {
+        $error['u'] = "Enter username";
+    } else {
+        $exists = db_select_one("SELECT id FROM doctors WHERE username = ? AND username != ? LIMIT 1", "ss", $uname, $doc);
+        if ($exists) {
+            $error['u'] = "Username already exists";
+        } else {
+            db_execute("UPDATE doctors SET username = ? WHERE username = ?", "ss", $uname, $doc);
+            $_SESSION['doctor'] = $uname;
+            $doc = $uname;
+            $success = "Username updated successfully";
+        }
+    }
+}
+
+if (isset($_POST['update_pass'])) {
+    $old_pass = $_POST['old_pass'] ?? '';
+    $new_pass = $_POST['new_pass'] ?? '';
+    $con_pass = $_POST['con_pass'] ?? '';
+
+    $row = db_select_one("SELECT password FROM doctors WHERE username = ? LIMIT 1", "s", $doc);
+    $pass = $row['password'] ?? '';
+
+    if ($old_pass === '') {
+        $error['p'] = "Enter old Password";
+    } elseif ($new_pass === '') {
+        $error['p'] = "Enter New Password";
+    } elseif ($con_pass === '') {
+        $error['p'] = "Confirm Password";
+    } elseif (!password_matches($old_pass, $pass)) {
+        $error['p'] = "Invalid old Password";
+    } elseif ($new_pass !== $con_pass) {
+        $error['p'] = "Both passwords do not match";
+    } else {
+        $new_hash = hash_user_password($new_pass);
+        db_execute("UPDATE doctors SET password = ? WHERE username = ?", "ss", $new_hash, $doc);
+        $success = "Password updated successfully";
+    }
+}
+
+$row = db_select_one("SELECT username, profile FROM doctors WHERE username = ? LIMIT 1", "s", $doc);
+$username = $row['username'] ?? $doc;
+$profile = $row['profile'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,201 +75,78 @@ error_reporting(0);
     <title>Doctor Profile</title>
 </head>
 <body>
-    <?php
-    include("../include/header.php");
-
-    include("../include/connection.php");
-    $doc = $_SESSION['doctor'];
-
-    $query = "SELECT * from doctors where username = '$doc'";
-
-    $res = mysqli_query($connect,$query);
-    while($row=mysqli_fetch_array($res)){
-        $username = $row['username'];
-        $profile = $row['profile'];
-    }
-
-
-    ?>
+    <?php include("../include/header.php"); ?>
 
     <div class="container-fluid">
         <div class="col-md-12">
             <div class="row">
                 <div class="col-md-2" style="margin-Left:-30px;">
-                    <?php
-                    include("sidenav.php");
-                    ?>
-
+                    <?php include("sidenav.php"); ?>
                 </div>
-
-
             </div>
-
         </div>
-
-
     </div>
+
     <div class="col-md-10">
-                    <div class="col-md-12">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h4><?php echo $username; ?> Profile</h4>
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4><?php echo e($username); ?> Profile</h4>
 
-                                <?php
-                                if(isset($_POST['update'])){
-                                    $profile = $_FILES['profile']['name'];
+                    <?php if ($success !== '') { ?>
+                        <h5 class="text-center alert alert-success"><?php echo e($success); ?></h5>
+                    <?php } ?>
+                    <?php if (isset($error['profile'])) { ?>
+                        <h5 class="text-center alert alert-danger"><?php echo e($error['profile']); ?></h5>
+                    <?php } ?>
 
-                                    if(empty($profile)){
-
-                                    }else{
-                                        $query = "UPDATE doctors SET profile = '$profile' WHERE username='$doc'";
-                                        $result = mysqli_query($connect,$query);
-                                        if($result){
-                                            move_uploaded_file($_FILES['profile']['tmp_name'],"img/$profile");
-                                        }
-                                    }
-                                }
-
-
-                                ?>
-                                
-                                <form method="post" enctype="multipart/form-data">
-                                   <?php
-                                   echo " <img src='img/$profile' class='col-md-12' style='height: 400px;'>";
-
-
-                                   ?>
-                                   <br><br>
-                                   <div class="form-group">
-                                    <label>UPDATE PROFILE</label>
-                                    <input type="file" name="profile" class="form-control">
-                                   </div>
-                                    <br>
-                                    <input type="submit" name="update" value="UPDATE" class="btn btn-success">
-
-                                </form>
-                            </div>
-                            <div class="col-md-6">
-                                <?php
-                                if(isset($_POST['change'])){
-                                    $uname=$_POST['uname'];
-                                    if(empty($uname)){
-
-
-
-                                    }else{
-                                        $query="UPDATE doctors SET username='$uname' WHERE username='$doc'";
-                                        $res=mysqli_query($connect,$query);
-                                        if($res){
-                                            $_SESSION['doctor']=$uname;
-
-
-
-
-                                        }
-
-                                    }
-
-
-
-                                }
-
-
-
-                                ?>
-                                <form method="post">
-                                    <label>Change Username</label>
-                                    <input type="text" name="uname"class="form-control"autocomplete="off"><br>
-                                    <input type="submit" name="change"class="btn btn-success"
-                                    value="Change">
-                                </form>
-                                <br><br>
-
-                                <?php
-                                if(isset($_POST['update_pass'])){
-                                    $old_pass = $_POST['old_pass'];
-                                    $new_pass = $_POST['new_pass'];
-                                    $con_pass = $_POST['con_pass'];
-
-                                    $error = array();
-
-                                    $old = mysqli_query($connect,"SELECT * FROM doctors WHERE username='$doc'");
-                                    $row = mysqli_fetch_array($old);
-                                    $pass = $row['password'];
-
-                                    if(empty($old_pass)){
-                                        $error['p'] = "Enter old Password";
-
-                                    }elseif (empty($new_pass)) {
-                                       $error['p'] = "Enter New Password";
-                                    }elseif(empty($con_pass)){
-                                        $error['p'] = "Confirm Password";
-                                    }elseif ($old_pass != $pass) {
-                                        $error['p']="Invalid old Password";
-                                        // code...
-                                    }elseif ($new_pass != $con_pass) {
-                                        $error['p'] = "Both password does not match";
-                                    }
-
-                                    if (count($error)==0) {
-                                        $query = "UPDATE doctors SET password = '$new_pass' WHERE username='$doc'";
-
-                                        mysqli_query($connect,$query);
-                                    }
-                              
-                                }
-
-                                if (isset($error['p'])) {
-                                        $e = $error['p'];
-                                        $show = "<h5 class='text-center alert alert-danger'>$e</h5>";
-                                    }else{
-                                        $show = "";
-                                    }
-
-
-                                ?>
-                                <form method="post">
-                                    <h5 class="text-center my-4">Change Password</h5>
-                                    <div>
-                                        <?php
-                                        echo $show;
-
-
-                                        ?>
-
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Old Password</label>
-                                        <input type="password" name="old_pass" class="form-control">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>New Password</label>
-                                        <input type="password" name="new_pass"class="form-control">
-
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Confirm Password</label>
-                                        <input type="password" name="con_pass"class="form-control">
-
-                                    </div>
-                                    <br>
-                                    <input type="submit" name="update_pass"value="Update Password"class="btn btn-info">
-
-
-
-
-                                </form>
-                                
-                            </div>
-
-                            
-
+                    <form method="post" enctype="multipart/form-data">
+                        <img src="img/<?php echo e($profile); ?>" class="col-md-12" style="height: 400px; object-fit: cover;" alt="Profile Picture">
+                        <br><br>
+                        <div class="form-group">
+                            <label>UPDATE PROFILE</label>
+                            <input type="file" name="profile" class="form-control" accept="image/jpeg,image/png,image/gif">
                         </div>
-
-                    </div>
-
+                        <br>
+                        <input type="submit" name="update" value="UPDATE" class="btn btn-success">
+                    </form>
                 </div>
 
-    
+                <div class="col-md-6">
+                    <form method="post">
+                        <?php if (isset($error['u'])) { ?>
+                            <h5 class="text-center alert alert-danger"><?php echo e($error['u']); ?></h5>
+                        <?php } ?>
+                        <label>Change Username</label>
+                        <input type="text" name="uname" class="form-control" autocomplete="off" value="<?php echo e($username); ?>"><br>
+                        <input type="submit" name="change" class="btn btn-success" value="Change">
+                    </form>
+
+                    <br><br>
+
+                    <form method="post">
+                        <h5 class="text-center my-4">Change Password</h5>
+                        <?php if (isset($error['p'])) { ?>
+                            <h5 class="text-center alert alert-danger"><?php echo e($error['p']); ?></h5>
+                        <?php } ?>
+                        <div class="form-group">
+                            <label>Old Password</label>
+                            <input type="password" name="old_pass" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" name="new_pass" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" name="con_pass" class="form-control">
+                        </div>
+                        <br>
+                        <input type="submit" name="update_pass" value="Update Password" class="btn btn-info">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

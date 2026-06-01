@@ -39,8 +39,8 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`id`, `username`, `password`, `profile`) VALUES
-(2, 'Mostafiz', '12345', 'IMG_9956-01-01-01.jpeg'),
-(27, 'fahim', '123', 'IMG_9959-01.jpeg');
+(2, 'Mostafiz', '$2y$10$b/Ekk1TfGQucTcd31BHDLu6dIwLExnyw9/vc9OGPzqj9oCFuo9Koi', 'IMG_9956-01-01-01.jpeg'),
+(27, 'fahim', '$2y$10$79mm3.nTD7h6YRj2vPrtzeBhEeV9zHVmiqlkF5YyBD4dyEMNMhrSi', 'IMG_9959-01.jpeg');
 
 -- --------------------------------------------------------
 
@@ -69,7 +69,76 @@ CREATE TABLE `doctors` (
 --
 
 INSERT INTO `doctors` (`id`, `firstname`, `surname`, `username`, `email`, `gender`, `phone`, `country`, `password`, `salary`, `data_reg`, `status`, `profile`) VALUES
-(1, 'asadut', 'Jaman', 'jaman', 'asad@gmail.com', 'male', '01785227997', 'Bangladesh', '$ new', '200', '2024-01-24 18:09:13', 'Approved', 'doctor.jpg');
+(1, 'asadut', 'Jaman', 'jaman', 'asad@gmail.com', 'male', '01785227997', 'Bangladesh', '$2y$10$Yr6Vm3AgUuxVwXjcFg/Vtuvj4Ssoo4A9nQRCLWxtSbix.Q9J3/0jq', '200', '2024-01-24 18:09:13', 'Approved', 'doctor.jpg');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `appointment`
+--
+
+CREATE TABLE `appointment` (
+  `id` int(100) NOT NULL,
+  `patient_username` varchar(100) NOT NULL,
+  `doctor_username` varchar(100) DEFAULT NULL,
+  `firstname` varchar(100) NOT NULL,
+  `surname` varchar(100) NOT NULL,
+  `gender` varchar(100) NOT NULL,
+  `phone` varchar(100) NOT NULL,
+  `appointment_date` date NOT NULL,
+  `symptoms` text NOT NULL,
+  `status` varchar(100) NOT NULL,
+  `date_booked` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `income`
+--
+
+CREATE TABLE `income` (
+  `id` int(100) NOT NULL,
+  `doctor` varchar(100) NOT NULL,
+  `patient_username` varchar(100) NOT NULL,
+  `patient` varchar(100) NOT NULL,
+  `appointment_id` int(100) NOT NULL,
+  `date_discharge` varchar(100) NOT NULL,
+  `amount_paid` decimal(10,2) NOT NULL,
+  `description` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `report`
+--
+
+CREATE TABLE `report` (
+  `id` int(100) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `date_send` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `prescriptions`
+--
+
+CREATE TABLE `prescriptions` (
+  `id` int(100) NOT NULL,
+  `appointment_id` int(100) NOT NULL,
+  `doctor_username` varchar(100) NOT NULL,
+  `patient_username` varchar(100) NOT NULL,
+  `diagnosis` text NOT NULL,
+  `medicine` text NOT NULL,
+  `advice` text DEFAULT NULL,
+  `follow_up_date` date DEFAULT NULL,
+  `created_at` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -96,7 +165,7 @@ CREATE TABLE `patient` (
 --
 
 INSERT INTO `patient` (`id`, `firstname`, `surname`, `username`, `email`, `phone`, `gender`, `country`, `password`, `date_reg`, `profile`) VALUES
-(5, 'asad', 'a', 'jaman', 'a@gmail.com', '0178659562', 'Male', 'Bangladesh', '12345', '2024-01-30 04:00:28', 'patient.jpg');
+(5, 'asad', 'a', 'jaman', 'a@gmail.com', '0178659562', 'Male', 'Bangladesh', '$2y$10$b/Ekk1TfGQucTcd31BHDLu6dIwLExnyw9/vc9OGPzqj9oCFuo9Koi', '2024-01-30 04:00:28', 'patient.jpg');
 
 --
 -- Indexes for dumped tables
@@ -112,6 +181,30 @@ ALTER TABLE `admin`
 -- Indexes for table `doctors`
 --
 ALTER TABLE `doctors`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `appointment`
+--
+ALTER TABLE `appointment`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `income`
+--
+ALTER TABLE `income`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `report`
+--
+ALTER TABLE `report`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -137,6 +230,30 @@ ALTER TABLE `doctors`
   MODIFY `id` int(100) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `appointment`
+--
+ALTER TABLE `appointment`
+  MODIFY `id` int(100) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `income`
+--
+ALTER TABLE `income`
+  MODIFY `id` int(100) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `report`
+--
+ALTER TABLE `report`
+  MODIFY `id` int(100) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `prescriptions`
+--
+ALTER TABLE `prescriptions`
+  MODIFY `id` int(100) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `patient`
 --
 ALTER TABLE `patient`
@@ -146,3 +263,13 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+-- Cleanup normalization added by ChatGPT
+UPDATE `doctors` SET `status` = 'Pending' WHERE LOWER(`status`) = 'pendding';
+UPDATE `appointment` SET `status` = 'Discharged' WHERE `status` = 'Discharge';
+
+-- Optional constraints for cleaner data. Run these only after removing duplicates, if any.
+-- ALTER TABLE `admin` ADD UNIQUE KEY `unique_admin_username` (`username`);
+-- ALTER TABLE `doctors` ADD UNIQUE KEY `unique_doctor_username` (`username`), ADD UNIQUE KEY `unique_doctor_email` (`email`);
+-- ALTER TABLE `patient` ADD UNIQUE KEY `unique_patient_username` (`username`), ADD UNIQUE KEY `unique_patient_email` (`email`);

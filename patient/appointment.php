@@ -1,6 +1,8 @@
 
 <?php
 session_start();
+include("../include/auth.php");
+require_login("patient", "../patientlogin.php");
 ?>
 <!DOCTYPE html>
 <html>
@@ -32,14 +34,14 @@ session_start();
 			
 			
 				$pat = $_SESSION['patient'];
-				$sel = mysqli_query($connect, "SELECT * FROM patient WHERE username='$pat'");
-				
-				$row = mysqli_fetch_array($sel);
+				$row = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $pat);
 				
 				$firstname = $row['firstname'];
 				$surname = $row['surname'];
 				$gender = $row['gender'];
 				$phone = $row['phone'];
+				$patient_username = $row['username'];
+				$doctors = mysqli_query($connect, "SELECT username, firstname, surname FROM doctors WHERE status='Approved' ORDER BY firstname ASC");
 
 				
 				
@@ -48,17 +50,28 @@ session_start();
 
 					if(isset($_POST['book'])){
 						
-						$date = $_POST['date'];
-						$sym = $_POST['sym'];
+						$date = trim($_POST['date'] ?? '');
+						$doctor_username = trim($_POST['doctor'] ?? '');
+						$sym = trim($_POST['sym'] ?? '');
 
-						if(empty($sym)){
-							
+						if(empty($date)){
+							echo "<script>alert('Select appointment date')</script>";
+						}else if(empty($doctor_username)){
+							echo "<script>alert('Select a doctor')</script>";
+						}else if(empty($sym)){
+							echo "<script>alert('Enter symptoms')</script>";
+						}else if($date < date('Y-m-d')){
+							echo "<script>alert('Appointment date cannot be in the past')</script>";
 						} else {
-							$query = "INSERT INTO appointment(firstname, surname, gender, phone, appointment_date, symptoms, status, date_booked) VALUES('$firstname','$surname','$gender','$phone','$date','$sym','Pending',NOW())";
-							$res = mysqli_query($connect, $query);
+							$doctor = db_select_one("SELECT username FROM doctors WHERE username = ? AND status='Approved' LIMIT 1", "s", $doctor_username);
+							if (!$doctor) {
+								echo "<script>alert('Selected doctor is not available')</script>";
+							} else {
+								$res = db_execute("INSERT INTO appointment(patient_username, doctor_username, firstname, surname, gender, phone, appointment_date, symptoms, status, date_booked) VALUES(?,?,?,?,?,?,?,?,'Pending',NOW())", "ssssssss", $patient_username, $doctor_username, $firstname, $surname, $gender, $phone, $date, $sym);
 
-							if($res){
-								echo "<script>alert('You have booked an appointment')</script>";
+								if($res){
+									echo "<script>alert('You have booked an appointment')</script>";
+								}
 							}
 						}
 					}
@@ -74,6 +87,16 @@ session_start();
 					<form method="post">
 						<label>Appointment Date</label>
 						<input type="date" name="date" class="form-control">
+
+						<label>Doctor</label>
+						<select name="doctor" class="form-control">
+							<option value="">Select Doctor</option>
+							<?php while($doctor = mysqli_fetch_array($doctors)){ ?>
+								<option value="<?php echo e($doctor['username']); ?>">
+									Dr. <?php echo e($doctor['firstname'] . ' ' . $doctor['surname']); ?>
+								</option>
+							<?php } ?>
+						</select>
 
 						<label>Symptoms</label>
 						<input type="text" name="sym" class="form-control" autocomplete="off" placeholder="Enter Symptoms">

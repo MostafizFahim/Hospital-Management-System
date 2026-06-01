@@ -1,5 +1,7 @@
 <?php
 session_start();
+include("../include/auth.php");
+require_login("doctor", "../doctorlogin.php");
 
 
 ?>
@@ -60,17 +62,17 @@ include("../include/connection.php");
 
                     while ($row = mysqli_fetch_array($res)) {
                         echo "<tr>
-                                <td>".$row['id']."</td>
-                                <td>".$row['firstname']."</td>
-                                <td>".$row['surname']."</td>
-                                <td>".$row['username']."</td>
-                                <td>".$row['email']."</td>
-                                <td>".$row['phone']."</td>
-                                <td>".$row['gender']."</td>
-                                <td>".$row['country']."</td>
-                                <td>".$row['date_reg']."</td>
+                                <td>".e($row['id'])."</td>
+                                <td>".e($row['firstname'])."</td>
+                                <td>".e($row['surname'])."</td>
+                                <td>".e($row['username'])."</td>
+                                <td>".e($row['email'])."</td>
+                                <td>".e($row['phone'])."</td>
+                                <td>".e($row['gender'])."</td>
+                                <td>".e($row['country'])."</td>
+                                <td>".e($row['date_reg'])."</td>
                                 <td>
-                                    <a href='view.php?id=".$row['id']."'>
+                                    <a href='view.php?id=".e($row['id'])."'>
                                         <button class='btn btn-info'>View</button>
                                     </a>
                                 </td>

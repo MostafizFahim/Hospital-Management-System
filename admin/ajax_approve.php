@@ -1,13 +1,10 @@
 <?php
-
+include("../include/auth.php");
+require_login("admin", "../adminLogin.php");
 include("../include/connection.php");
 
-$id = $_POST['id'];
-
-$query = "UPDATE doctors SET status='Approved' WHERE id='$id'";
-
-mysqli_query($connect,$query);
-
-
-
+$id = (int) ($_POST['id'] ?? 0);
+if ($id > 0) {
+    db_execute("UPDATE doctors SET status = 'Approved' WHERE id = ?", "i", $id);
+}
 ?>

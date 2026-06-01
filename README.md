@@ -1,204 +1,164 @@
 # Hospital Management System
 
-A PHP and MySQL based web application for managing basic hospital activities through separate panels for admin, doctors, and patients.
+A raw PHP, HTML, Bootstrap, and MySQL Hospital Management System for learning full-stack PHP without a framework. The project has separate admin, doctor, and patient panels and now includes a more realistic appointment, discharge, invoice, and prescription workflow.
 
-## Project Overview
+## Current Version
 
-This project is a simple Hospital Management System built with PHP, MySQL, Bootstrap, and HTML/CSS. It provides user-facing pages for patients and doctors, plus an admin login area for managing hospital-related information. The project uses a MySQL database named `hmsDB` and includes an SQL dump file, `hmsdb.sql`, for creating the required database tables.
+This is still a **plain PHP project**, not Laravel and not any other PHP framework. It uses reusable PHP includes, shared helpers, role-based session checks, MySQLi prepared statements in key flows, and a shared Bootstrap-based UI.
+
+Laravel migration notes are included for later learning, but the runnable app is the root PHP/MySQL project.
 
 ## Features
 
-- Home page with hospital management navigation
-- Admin login system
-- Doctor login and doctor account workflow
-- Patient account creation and patient login workflow
-- Doctor application option
-- MySQL database integration
-- Bootstrap based responsive layout
-- Image-based UI sections for doctor, patient, and information panels
+- Public home page
+- Admin login and dashboard
+- Doctor login and dashboard
+- Patient registration/login/dashboard
+- Doctor application and admin approval/rejection
+- Patient appointment booking with approved doctor selection
+- Doctor appointment queue
+- Doctor discharge workflow
+- Invoice generation
+- Prescription/diagnosis record creation during discharge
+- Patient invoice and prescription view
+- Patient report submission
+- Admin reports, income, doctors, patients, job requests, and appointments overview
+- Protected role-based pages
+- Secure logout with full session destruction
+- Password hashing with backward-compatible legacy password upgrade
+- Basic input validation and output escaping
+- Safer image uploads for profile photos
+- Modernized shared navigation/sidebar/card/table styling
+- Future Laravel migration blueprint in `laravel-blueprint/`
 
-## Technologies Used
+## Technologies
 
 | Technology | Purpose |
 |---|---|
-| PHP | Backend and server-side logic |
+| PHP 8+ | Backend logic |
 | MySQL / MariaDB | Database |
 | HTML | Page structure |
-| CSS / Bootstrap | Styling and responsive layout |
-| JavaScript / jQuery | Frontend interaction support |
-| XAMPP | Recommended local development environment |
+| Bootstrap 5 | UI styling |
+| jQuery | Existing AJAX support |
+| XAMPP | Recommended local development stack |
 
 ## Project Structure
 
 ```text
 Hospital-Management-System/
-├── admin/                  # Admin dashboard files
-├── doctor/                 # Doctor panel files
-├── patient/                # Patient panel files
-├── include/                # Shared files such as header and database connection
-│   ├── connection.php
-│   └── header.php
-├── img/                    # Project images and UI assets
-├── hmsdb.sql               # Database SQL dump
-├── index.php               # Main home page
-├── adminLogin.php          # Admin login page
-├── doctorlogin.php         # Doctor login page
-├── patientlogin.php        # Patient login page
-├── account.php             # Patient account creation page
-├── apply.php               # Doctor application page
-└── README.md
+  admin/                 Admin panel pages
+  doctor/                Doctor panel pages
+  patient/               Patient panel pages
+  include/
+    connection.php       DB config, helpers, validation helpers
+    auth.php             Auth guard and logout helper
+    header.php           Shared styles, scripts, top navigation
+  docs/                  Architecture and Laravel migration notes
+  laravel-blueprint/     Future Laravel reference files only
+  img/                   Public images
+  hmsdb.sql              Database schema and sample data
+  index.php              Home page
 ```
 
 ## Requirements
 
-Before running the project, install:
-
-- XAMPP, WAMP, Laragon, or any PHP local server
-- PHP 7.4 or newer
+- XAMPP, WAMP, Laragon, or another PHP local server
+- PHP 8.0 or newer recommended
 - MySQL or MariaDB
-- Web browser
-
-Recommended setup: **XAMPP** because it includes Apache, PHP, MySQL/MariaDB, and phpMyAdmin in one package.
+- Browser
 
 ## Database Configuration
 
-The database connection is configured in:
+The database settings are in:
 
 ```text
 include/connection.php
 ```
 
-Current default connection:
+Current local configuration:
 
 ```php
-$connect = mysqli_connect("localhost", "root", "", "hmsDB");
+$host = "localhost";
+$user = "root";
+$password = "root";
+$database = "hmsDB";
 ```
 
-So the project expects:
+If your MySQL root password is empty, change `$password` to `""`.
 
-| Item | Value |
-|---|---|
-| Host | `localhost` |
-| Username | `root` |
-| Password | empty password |
-| Database | `hmsDB` |
-| SQL file | `hmsdb.sql` |
+## Setup With XAMPP
 
-## How to Run with XAMPP and phpMyAdmin
-
-1. Download or clone the repository:
-
-```bash
-git clone https://github.com/MostafizFahim/Hospital-Management-System.git
-```
-
-2. Copy the project folder into the XAMPP `htdocs` directory:
+1. Put the project in:
 
 ```text
-C:\xampp\htdocs\Hospital-Management-System
+D:\Xampp\htdocs\Hospital-Management-System
 ```
 
-3. Start **Apache** and **MySQL** from the XAMPP Control Panel.
+2. Start Apache and MySQL from XAMPP.
 
-4. Open phpMyAdmin:
+3. Open phpMyAdmin:
 
 ```text
 http://localhost/phpmyadmin
 ```
 
-5. Create a new database named:
+4. Create a database:
 
 ```text
 hmsDB
 ```
 
-6. Select the `hmsDB` database.
+5. Import:
 
-7. Go to the **Import** tab.
+```text
+hmsdb.sql
+```
 
-8. Choose the `hmsdb.sql` file from the project folder.
-
-9. Click **Go** to import the database.
-
-10. Open the project in your browser:
+6. Open:
 
 ```text
 http://localhost/Hospital-Management-System/
 ```
 
-## How to Run without XAMPP/phpMyAdmin
+## Run With PHP Built-In Server
 
-You can also run the project using PHP's built-in server and MySQL CLI.
+If PHP is available:
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/MostafizFahim/Hospital-Management-System.git
-cd Hospital-Management-System
+```powershell
+cd D:\Xampp\htdocs\Hospital-Management-System
+D:\Xampp\php\php.exe -S 127.0.0.1:8090
 ```
 
-2. Create the database from MySQL CLI:
-
-```bash
-mysql -u root -p -e "CREATE DATABASE hmsDB;"
-```
-
-3. Import the SQL file:
-
-```bash
-mysql -u root -p hmsDB < hmsdb.sql
-```
-
-4. Start PHP local server from the project root:
-
-```bash
-php -S localhost:8000
-```
-
-5. Open the project:
+Then open:
 
 ```text
-http://localhost:8000
+http://127.0.0.1:8090/
 ```
 
-If your MySQL username or password is different, update `include/connection.php`.
+## Default Login Credentials
 
-## Default Login Information
+The SQL dump uses hashed passwords, but these plain credentials still work.
 
-The SQL dump includes sample users.
-
-### Admin Login
+### Admin
 
 | Username | Password |
 |---|---|
 | `Mostafiz` | `12345` |
 | `fahim` | `123` |
 
-Admin login page:
-
-```text
-http://localhost/Hospital-Management-System/adminLogin.php
-```
-
-For PHP built-in server:
-
-```text
-http://localhost:8000/adminLogin.php
-```
-
-### Sample Doctor
+### Doctor
 
 | Username | Password | Status |
 |---|---|---|
 | `jaman` | `$ new` | Approved |
 
-### Sample Patient
+### Patient
 
 | Username | Password |
 |---|---|
 | `jaman` | `12345` |
 
-## Important URLs
+## Main URLs
 
 | Page | URL |
 |---|---|
@@ -206,60 +166,68 @@ http://localhost:8000/adminLogin.php
 | Admin Login | `/adminLogin.php` |
 | Doctor Login | `/doctorlogin.php` |
 | Patient Login | `/patientlogin.php` |
-| Patient Account | `/account.php` |
+| Patient Registration | `/account.php` |
 | Doctor Application | `/apply.php` |
+| Admin Dashboard | `/admin/index.php` |
+| Doctor Dashboard | `/doctor/index.php` |
+| Patient Dashboard | `/patient/index.php` |
 
-## Common Problems and Fixes
+## Real-Life HMS Workflow
 
-### Database connection failed
+1. Patient creates an account or logs in.
+2. Patient books an appointment and selects an approved doctor.
+3. Doctor sees assigned pending appointments.
+4. Doctor checks appointment details.
+5. Doctor discharges the patient with:
+   - invoice fee
+   - billing description
+   - diagnosis
+   - medicine/prescription
+   - advice
+   - optional follow-up date
+6. Patient views invoice and prescription details.
+7. Admin tracks appointments, income, reports, doctors, patients, and job requests.
 
-Check `include/connection.php` and confirm that the database name, username, and password match your local MySQL setup.
+## Security Improvements
 
-### `hmsDB` not found
+- Session ID regeneration after login.
+- Full session/cookie cleanup on logout.
+- Role-based access guard for admin, doctor, and patient pages.
+- Password hashing with `password_hash`.
+- Legacy plain-text password support only for upgrade.
+- Output escaping through helper function.
+- Prepared query helpers for safer database operations.
+- Input validation for core forms.
+- Profile image upload validation by size/type/extension.
 
-Create the database first, then import `hmsdb.sql`.
+## Composer And Laravel
 
-### Page shows PHP code instead of running
+Composer is PHP's dependency manager, similar to npm for JavaScript. Laravel needs Composer to install Laravel and its packages.
 
-Open the project through Apache or PHP server. Do not open `.php` files directly by double-clicking them.
+Composer is not required to run this raw PHP project.
 
-Correct:
+For future Laravel learning, see:
 
-```text
-http://localhost/Hospital-Management-System/
-```
+- `docs/LARAVEL_MIGRATION_PLAN.md`
+- `laravel-blueprint/`
 
-Wrong:
+## Known Limitations
 
-```text
-file:///C:/xampp/htdocs/Hospital-Management-System/index.php
-```
+This is still a learning project. It is more realistic now, but a production HMS would still need:
 
-### Images not loading
-
-Make sure the `img/` folder remains inside the project and file names are unchanged.
-
-### Login not working
-
-Import `hmsdb.sql` again and use the sample credentials from this README.
-
-## Suggested Future Updates
-
-- Use prepared statements to prevent SQL injection
-- Hash user passwords instead of storing plain text passwords
-- Add form validation on both frontend and backend
-- Improve folder structure using MVC pattern
-- Add appointment management
-- Add prescription and report management
-- Add dashboard statistics
-- Improve UI design and mobile responsiveness
-- Add role-based access control
+- CSRF tokens on all forms
+- More complete prepared-statement coverage
+- Dedicated departments, rooms, beds, staff, lab tests, and admissions
+- Pagination/search/filtering for large data
+- Better audit logs
+- Email/SMS notifications
+- Stronger authorization policies
+- More robust file storage
 
 ## Author
 
-**Mostafiz Fahim**  
-GitHub: [MostafizFahim](https://github.com/MostafizFahim)
+Mostafiz Fahim
 
 ## License
 
-This project is for academic and learning purposes. You can modify and improve it for your own practice.
+For academic and learning purposes.

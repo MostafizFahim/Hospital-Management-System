@@ -1,0 +1,10 @@
+vendor/
+node_modules/
+.env
+.env.*
+!.env.example
+composer.phar
+laravel-hms/vendor/
+laravel-hms/node_modules/
+laravel-hms/.env
+laravel-hms/storage/logs/*.log

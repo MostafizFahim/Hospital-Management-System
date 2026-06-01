@@ -1,10 +1,11 @@
 <?php
+session_start();
 include("include/connection.php");
 
 if(isset($_POST['login'])){
 
-	$uname = $_POST['uname'];
-	$pass = $_POST['pass'];
+	$uname = trim($_POST['uname'] ?? '');
+	$pass = $_POST['pass'] ?? '';
 
 	if(empty($uname)){
 		echo "<script>alert('Enter Username')</script>";
@@ -13,16 +14,20 @@ if(isset($_POST['login'])){
 		echo "<script>alert('Enter Password')</script>";
 
 	}else {
-		$query = "SELECT * FROM patient WHERE username='$uname' AND password='$pass'";
-		$res = mysqli_query($connect,$query);
+		$row = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $uname);
 
-		if(mysqli_num_rows($res)==1){
-			header("Location: patient/index.php");
-
+		if($row && password_matches($pass, $row['password'])){
+			if (password_is_legacy($row['password'])) {
+				$hash = hash_user_password($pass);
+				db_execute("UPDATE patient SET password = ? WHERE id = ?", "si", $hash, $row['id']);
+			}
+			session_regenerate_id(true);
 			$_SESSION['patient'] = $uname;
+			header("Location: patient/index.php");
+			exit();
 
 		}else{
-			echo "<script>alert('Invaild Account')</script>";
+			echo "<script>alert('Invalid Account')</script>";
 		}
 
 
@@ -65,7 +70,7 @@ if(isset($_POST['login'])){
 
 						</div>
 						<input type="submit" name="login" class=" btn btn-info my-3" value="Login">
-						<p>I dont have an account <a href="account.php">Click Here</a></p>
+						<p>I don't have an account <a href="account.php">Click Here</a></p>
 					</form>
 					
 				</div>

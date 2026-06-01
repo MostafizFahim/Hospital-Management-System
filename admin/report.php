@@ -1,5 +1,7 @@
 <?php
 session_start();
+include("../include/auth.php");
+require_login("admin", "../adminLogin.php");
 ?>
 <!DOCTYPE html>
 <html>
@@ -53,11 +55,11 @@ session_start();
 
                     while ($row = mysqli_fetch_array($res)) {
                         echo "<tr>
-                                <td>".$row['id']."</td>
-                                <td>".$row['title']."</td>
-                                <td>".$row['message']."</td>
-                                <td>".$row['username']."</td>
-                                <td>".$row['date_send']."</td>
+                                <td>".e($row['id'])."</td>
+                                <td>".e($row['title'])."</td>
+                                <td>".e($row['message'])."</td>
+                                <td>".e($row['username'])."</td>
+                                <td>".e($row['date_send'])."</td>
                                 
                                 
                             </tr>";

@@ -2,6 +2,8 @@
 <?php
 
 session_start();
+include("../include/auth.php");
+require_login("patient", "../patientlogin.php");
 ?>
 <!DOCTYPE html>
 <html>
@@ -84,16 +86,16 @@ session_start();
 
 					<?php
 					if (isset($_POST['send'])) {
-						$title = $_POST['title'];
-						$message = $_POST['message'];
+						$title = db_escape($_POST['title']);
+						$message = db_escape($_POST['message']);
 
 						if (empty($title)) {
 							
 						}elseif(empty($message)){
 
 						}else{
-							//$user = $_SESSION['patient'];
-							$query = "INSERT INTO report(title,message,date_send) VALUES('$title','$message',NOW())";
+							$user = $_SESSION['patient'];
+							$query = "INSERT INTO report(title,message,username,date_send) VALUES('$title','$message','$user',NOW())";
 
 							$res = mysqli_query($connect,$query);
 

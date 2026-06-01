@@ -1,3 +1,7 @@
+<?php
+include("../include/auth.php");
+require_login("admin", "../adminLogin.php");
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -32,9 +36,9 @@
 					<?php 
 
 						if(isset($_GET['id'])){
-							$id = $_GET['id'];
+							$id = (int) $_GET['id'];
 
-							$query = "SELECT * FROM doctors WHERE id='$id'";
+							$query = "SELECT * FROM doctors WHERE id=$id";
 							$res = mysqli_query($connect,$query);
 
 							$row = mysqli_fetch_array($res);
@@ -44,16 +48,16 @@
 						<div class="col-md-8">
 							<h5 class="text-center">Doctor Details</h5>
 
-							<h5 class="col-md-3">ID : <?php echo $row['id']; ?></h5>
-							<h5 class="col-md-3">Firstname : <?php echo $row['firstname']; ?></h5>
-							<h5 class="col-md-3">Surname : <?php echo $row['surname']; ?></h5>
-							<h5 class="col-md-3">Username: <?php echo $row['username']; ?></h5>
-							<h5 class="col-md-3">Email : <?php echo $row['email']; ?></h5>
-							<h5 class="col-md-3">Phone : +<?php echo $row['phone']; ?></h5>
-							<h5 class="col-md-3">Gender : <?php echo $row['gender']; ?></h5>
-							<h5 class="col-md-3">Country : <?php echo $row['country']; ?></h5>
-							<h5 class="col-md-3">Data register : <?php echo $row['data_reg']; ?></h5>
-							<h5 class="col-md-3">Salary : $<?php echo $row['salary']; ?></h5>
+							<h5 class="col-md-3">ID : <?php echo e($row['id']); ?></h5>
+							<h5 class="col-md-3">Firstname : <?php echo e($row['firstname']); ?></h5>
+							<h5 class="col-md-3">Surname : <?php echo e($row['surname']); ?></h5>
+							<h5 class="col-md-3">Username: <?php echo e($row['username']); ?></h5>
+							<h5 class="col-md-3">Email : <?php echo e($row['email']); ?></h5>
+							<h5 class="col-md-3">Phone : +<?php echo e($row['phone']); ?></h5>
+							<h5 class="col-md-3">Gender : <?php echo e($row['gender']); ?></h5>
+							<h5 class="col-md-3">Country : <?php echo e($row['country']); ?></h5>
+							<h5 class="col-md-3">Data register : <?php echo e($row['data_reg']); ?></h5>
+							<h5 class="col-md-3">Salary : $<?php echo e($row['salary']); ?></h5>
 							
 						</div>
 						<div class="col-md-4">
@@ -61,9 +65,9 @@
 							<?php 
 
 							if (isset($_POST['update'])){
-								$salary = $_POST['salary'];
+								$salary = (float) $_POST['salary'];
 
-								$q = "UPDATE doctors SET salary='$salary' WHERE id='$id'";
+								$q = "UPDATE doctors SET salary='$salary' WHERE id=$id";
 								mysqli_query($connect,$q);
 							}
 
@@ -71,7 +75,7 @@
 
 							<form method="post">
 								<label> Enter Doctor's Salary</label>
-								<input type="number" name="salary" class="form-control" autocomplete="off" placeholder="Enter Doctor's Salary" value="</php echo $row['salary']?>">
+								<input type="number" name="salary" class="form-control" autocomplete="off" placeholder="Enter Doctor's Salary" value="<?php echo e($row['salary']); ?>">
 								<input type="submit" name="update" class="btn btn-info my-3" value="update Salary">
 
 							</form>
