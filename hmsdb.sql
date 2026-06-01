@@ -41,8 +41,7 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`id`, `username`, `password`, `profile`, `role`, `status`) VALUES
-(2, 'Mostafiz', '$2y$10$b/Ekk1TfGQucTcd31BHDLu6dIwLExnyw9/vc9OGPzqj9oCFuo9Koi', 'IMG_9956-01-01-01.jpeg', 'Super Admin', 'Active'),
-(27, 'fahim', '$2y$10$79mm3.nTD7h6YRj2vPrtzeBhEeV9zHVmiqlkF5YyBD4dyEMNMhrSi', 'IMG_9959-01.jpeg', 'Admin', 'Active');
+(27, 'fahim', '$2y$10$djXcR0dqK2CYvAMb0kfvyel3epURREV9/Hx/nAYo84UYUSaA9t9KO', 'IMG_9959-01.jpeg', 'Super Admin', 'Active');
 
 -- --------------------------------------------------------
 

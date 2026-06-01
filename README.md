@@ -1,86 +1,112 @@
 # Hospital Management System
 
-A raw PHP, HTML, Bootstrap, and MySQL Hospital Management System for learning full-stack PHP without a framework. The project has separate admin, doctor, and patient panels and now includes a more realistic appointment, consultation, billing, receipt, and prescription workflow.
+A plain PHP, Bootstrap, and MySQL Hospital Management System built for learning raw PHP before moving to Laravel. It includes separate Admin, Doctor, and Patient portals with a more realistic appointment, consultation, prescription, billing, and receipt workflow.
 
-## Current Version
+## Highlights
 
-This is still a **plain PHP project**, not Laravel and not any other PHP framework. It uses reusable PHP includes, shared helpers, role-based session checks, MySQLi prepared statements in key flows, and a shared Bootstrap-based UI.
+- Raw PHP/MySQL project, no framework required.
+- Role-based access for Super Admin, normal Admin, Doctor, and Patient.
+- Patient registration with unique username/email, address, validation, and password visibility controls.
+- Doctor application review with qualification, specialization, license/certification, experience, and consultation fee.
+- Admin appointment approval, rejection, cancellation, and rescheduling.
+- Doctor consultation flow with diagnosis, medicines, dosage, duration, tests, advice, follow-up, and bill creation.
+- Prescription access is separate from payment status: patients can view prescriptions before paying.
+- Billing supports unpaid, paid, and waived states; receipts are visible only after payment.
+- Modern shared UI for dashboards, tables, forms, sidebars, and profile pages.
 
-Laravel migration notes are included for later learning, but the runnable app is the root PHP/MySQL project.
+## Screenshots
 
-## Features
+The full screenshot set is stored in [`docs/screenshots`](docs/screenshots). Sections below are grouped so the README stays readable.
 
-- Public home page
-- Admin login and dashboard
-- Doctor login and dashboard
-- Patient registration/login/dashboard
-- Doctor application with address, specialization, qualification, license, certification, and experience review
-- Admin doctor application review screen before approval/rejection
-- Patient appointment booking with approved doctor selection
-- Admin appointment approval/rejection/reschedule before doctor visit
-- Doctor appointment queue for approved assigned appointments
-- Doctor consultation workflow with validation
-- Invoice generation with unpaid/paid/waived payment status
-- Admin billing desk for collecting or waiving invoices
-- Prescription/diagnosis record creation during consultation
-- Patient bill, receipt, and prescription view
-- Patient report submission
-- Admin reports, income, doctors, patients, job requests, and appointments overview
-- Super Admin controlled administrator management with normal admin read-only visibility
-- Patient address management with unique username/email validation
-- Protected role-based pages
-- Secure logout with full session destruction
-- Password hashing with backward-compatible legacy password upgrade
-- Basic input validation and output escaping
-- Safer image uploads for profile photos
-- Modernized home, login, dashboard, navigation, sidebar, card, form, and table styling
-- Future Laravel migration blueprint in `laravel-blueprint/`
+![Home page](docs/screenshots/index.php.png)
 
-## Technologies
+<details>
+<summary>Authentication and registration</summary>
 
-| Technology      | Purpose                             |
-| --------------- | ----------------------------------- |
-| PHP 8+          | Backend logic                       |
-| MySQL / MariaDB | Database                            |
-| HTML            | Page structure                      |
-| Bootstrap 5     | UI styling                          |
-| jQuery          | Existing AJAX support               |
-| XAMPP           | Recommended local development stack |
+<p>
+  <img src="docs/screenshots/adminLogin.php.png" width="48%" alt="Admin login">
+  <img src="docs/screenshots/doctorLogin.php.png" width="48%" alt="Doctor login">
+</p>
+<p>
+  <img src="docs/screenshots/patientLogin.php.png" width="48%" alt="Patient login">
+  <img src="docs/screenshots/account.php.png" width="48%" alt="Patient registration">
+</p>
+<p>
+  <img src="docs/screenshots/apply.php.png" width="98%" alt="Doctor application">
+</p>
 
-## Project Structure
+</details>
+
+<details>
+<summary>Admin workspace</summary>
+
+<p>
+  <img src="docs/screenshots/admin.index.php.png" width="48%" alt="Admin dashboard">
+  <img src="docs/screenshots/admin.appointment.php.png" width="48%" alt="Admin appointments">
+</p>
+<p>
+  <img src="docs/screenshots/admin.job_request.php.png" width="48%" alt="Doctor applications">
+  <img src="docs/screenshots/admin.review_doctor.php.png" width="48%" alt="Doctor application review">
+</p>
+<p>
+  <img src="docs/screenshots/admin.doctor.php.png" width="48%" alt="Doctors">
+  <img src="docs/screenshots/admin.patient.php.png" width="48%" alt="Patients">
+</p>
+<p>
+  <img src="docs/screenshots/admin.income.php.png" width="48%" alt="Billing">
+  <img src="docs/screenshots/admin.admin.php.png" width="48%" alt="Administrator management">
+</p>
+
+</details>
+
+<details>
+<summary>Doctor and patient portals</summary>
+
+<p>
+  <img src="docs/screenshots/doctor.index.php.png" width="48%" alt="Doctor dashboard">
+  <img src="docs/screenshots/doctor.appointment.php.png" width="48%" alt="Doctor appointments">
+</p>
+<p>
+  <img src="docs/screenshots/doctor.discharge.php.png" width="48%" alt="Doctor consultation">
+  <img src="docs/screenshots/patient.index.php.png" width="48%" alt="Patient dashboard">
+</p>
+<p>
+  <img src="docs/screenshots/patient.appointment.php.png" width="48%" alt="Patient appointments">
+  <img src="docs/screenshots/patient.prescribtion.php.png" width="48%" alt="Patient prescriptions">
+</p>
+<p>
+  <img src="docs/screenshots/patient.bills.php.png" width="48%" alt="Patient bills">
+  <img src="docs/screenshots/admin.profile.php.png" width="48%" alt="Profile page">
+</p>
+
+</details>
+
+## Default Access
+
+Use this Super Admin account after importing the SQL dump:
+
+| Role | Username | Password |
+| ---- | -------- | -------- |
+| Super Admin | `fahim` | `123456` |
+
+## Setup
+
+1. Copy the project to your XAMPP web root:
 
 ```text
-Hospital-Management-System/
-  admin/                 Admin panel pages
-  doctor/                Doctor panel pages
-  patient/               Patient panel pages
-  include/
-    connection.php       DB config, helpers, validation helpers
-    auth.php             Auth guard and logout helper
-    header.php           Shared styles, scripts, top navigation
-  docs/                  Architecture and Laravel migration notes
-  laravel-blueprint/     Future Laravel reference files only
-  img/                   Public images
-  hmsdb.sql              Database schema and sample data
-  index.php              Home page
+D:\Xampp\htdocs\Hospital-Management-System
 ```
 
-## Requirements
-
-- XAMPP, WAMP, Laragon, or another PHP local server
-- PHP 8.0 or newer recommended
-- MySQL or MariaDB
-- Browser
-
-## Database Configuration
-
-The database settings are in:
+2. Start Apache and MySQL from XAMPP.
+3. Create a MySQL database named `hmsDB`.
+4. Import [`hmsdb.sql`](hmsdb.sql).
+5. Open the app:
 
 ```text
-include/connection.php
+http://localhost/Hospital-Management-System/
 ```
 
-Current local configuration:
+If your MySQL password is different, update [`include/connection.php`](include/connection.php):
 
 ```php
 $host = "localhost";
@@ -89,171 +115,39 @@ $password = "root";
 $database = "hmsDB";
 ```
 
-If your MySQL root password is empty, change `$password` to `""`.
+## Main Workflow
 
-## Setup With XAMPP
+1. Patient registers and books an appointment.
+2. Appointment starts as Pending, Unpaid, and Not Created for prescription.
+3. Admin approves, rejects, cancels, or reschedules the appointment.
+4. Approved appointments appear in the assigned doctor's queue.
+5. Doctor completes consultation and creates prescription plus bill.
+6. Appointment becomes Completed and prescription becomes visible to the patient immediately.
+7. Bill remains Unpaid until admin marks it Paid.
+8. Patient can view prescription before payment, but receipt is available only after payment.
 
-1. Put the project in:
-
-```text
-D:\Xampp\htdocs\Hospital-Management-System
-```
-
-2. Start Apache and MySQL from XAMPP.
-
-3. Open phpMyAdmin:
-
-```text
-http://localhost/phpmyadmin
-```
-
-4. Create a database:
+## Project Structure
 
 ```text
-hmsDB
+admin/              Admin dashboard, doctors, patients, appointments, billing
+doctor/             Doctor dashboard, appointments, consultation, patients
+patient/            Patient dashboard, appointment booking, bills, prescriptions
+include/            Database connection, auth guard, shared header/UI helpers
+docs/screenshots/   Project screenshots used in this README
+hmsdb.sql           Database schema and sample data
 ```
 
-5. Import:
+## Tech Stack
 
-```text
-hmsdb.sql
-```
+- PHP 8+
+- MySQL / MariaDB
+- Bootstrap 5
+- jQuery
+- XAMPP for local development
 
-6. Open:
+## Laravel Note
 
-```text
-http://localhost/Hospital-Management-System/
-```
-
-## Run With PHP Built-In Server
-
-If PHP is available:
-
-```powershell
-cd D:\Xampp\htdocs\Hospital-Management-System
-D:\Xampp\php\php.exe -S 127.0.0.1:8090
-```
-
-Then open:
-
-```text
-http://127.0.0.1:8090/
-```
-
-## Default Login Credentials
-
-The SQL dump uses hashed passwords, but these plain credentials still work.
-
-### Admin
-
-| Username   | Password |
-| ---------- | -------- |
-| `Mostafiz` | `12345`  |
-| `fahim`    | `123`    |
-
-### Doctor
-
-| Username | Password | Status   |
-| -------- | -------- | -------- |
-| `jaman`  | `$ new`  | Approved |
-
-### Patient
-
-| Username | Password |
-| -------- | -------- |
-| `jaman`  | `12345`  |
-
-## Main URLs
-
-| Page                 | URL                  |
-| -------------------- | -------------------- |
-| Home                 | `/index.php`         |
-| Admin Login          | `/adminLogin.php`    |
-| Doctor Login         | `/doctorlogin.php`   |
-| Patient Login        | `/patientlogin.php`  |
-| Patient Registration | `/account.php`       |
-| Doctor Application   | `/apply.php`         |
-| Admin Dashboard      | `/admin/index.php`   |
-| Doctor Dashboard     | `/doctor/index.php`  |
-| Patient Dashboard    | `/patient/index.php` |
-
-## Screenshots To Add
-
-Place screenshots in `docs/screenshots/` with these filenames, then link them in this section.
-
-| Screenshot | Suggested file | Why it matters |
-| ---------- | -------------- | -------------- |
-| Home page | `home.png` | Shows the public landing and navigation |
-| Patient registration | `patient-registration.png` | Shows address/password validation fields |
-| Doctor application | `doctor-application.png` | Shows qualification, license, experience, and consultation fee fields |
-| Admin dashboard | `admin-dashboard.png` | Shows the 8-card real-life HMS overview |
-| Doctor application review | `doctor-application-review.png` | Shows admin credential review before approval/rejection |
-| Appointment management | `admin-appointments.png` | Shows approve/reject/reschedule workflow |
-| Doctor consultation | `doctor-consultation.png` | Shows prescription, dosage, tests, follow-up, and billing form |
-| Patient prescriptions | `patient-prescriptions.png` | Shows prescription visible while bill is unpaid |
-| Admin billing | `admin-billing.png` | Shows unpaid/paid bills, waiver, and mark-paid actions |
-| Patient receipt | `patient-receipt.png` | Shows receipt only after payment is marked paid |
-| Administrator management | `admin-management.png` | Shows Super Admin vs normal admin permissions |
-
-## Real-Life HMS Workflow
-
-1. Patient creates an account or logs in.
-2. Patient books an appointment and selects an approved doctor.
-3. Admin reviews the request and approves or cancels the appointment.
-4. Doctor sees only assigned approved appointments.
-5. Doctor checks appointment details.
-6. Doctor completes the consultation with:
-   - invoice fee
-   - billing description
-   - diagnosis
-   - medicine/prescription
-   - advice
-   - optional follow-up date
-7. The appointment becomes completed and the prescription becomes visible immediately.
-8. The system creates an unpaid bill, keeping prescription access separate from payment status.
-9. Admin marks the bill as paid, unpaid, or applies amount/percentage waivers from the billing desk.
-10. Patient views prescription while unpaid, and views/prints receipt only after payment is marked paid.
-11. Admin tracks appointments, billing, reports, doctors, patients, and job requests.
-
-## Security Improvements
-
-- Session ID regeneration after login.
-- Full session/cookie cleanup on logout.
-- Role-based access guard for admin, doctor, and patient pages.
-- Password hashing with `password_hash`.
-- Legacy plain-text password support only for upgrade.
-- Output escaping through helper function.
-- Prepared query helpers for safer database operations.
-- Input validation for core forms.
-- Unique username/email validation for patient and doctor accounts.
-- Admin account mutations restricted to one active Super Admin.
-- Profile image upload validation by size/type/extension.
-
-## Composer And Laravel
-
-Composer is PHP's dependency manager, similar to npm for JavaScript. Laravel needs Composer to install Laravel and its packages.
-
-Composer is not required to run this raw PHP project.
-
-For future Laravel learning, see:
-
-- `docs/LARAVEL_MIGRATION_PLAN.md`
-- `laravel-blueprint/`
-
-## Known Limitations
-
-This is still a learning project. It is more realistic now, but a production HMS would still need:
-
-- CSRF tokens on all forms
-- More complete prepared-statement coverage
-- Dedicated departments, rooms, beds, staff, lab tests, and admissions
-- Appointment time slots and doctor availability calendars
-- Pharmacy, lab, and inventory modules
-- Pagination/search/filtering for large data
-- Better audit logs
-- Email/SMS notifications
-- Stronger authorization policies
-- More robust file storage
+This project intentionally stays in raw PHP for learning. Laravel migration planning files are kept in [`docs`](docs) and [`laravel-blueprint`](laravel-blueprint) for future study.
 
 ## Author
 
