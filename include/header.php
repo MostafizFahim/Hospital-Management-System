@@ -187,7 +187,7 @@ $rootPrefix = ($isAdminPage || $isDoctorPage || $isPatientPage) ? '../' : '';
 
     .hms-stat-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 1rem;
         margin-bottom: 1.25rem;
     }
@@ -198,12 +198,22 @@ $rootPrefix = ($isAdminPage || $isDoctorPage || $isPatientPage) ? '../' : '';
         justify-content: space-between;
         gap: 1rem;
         min-height: 120px;
+        overflow: hidden;
+    }
+
+    .hms-stat > div {
+        min-width: 0;
     }
 
     .hms-stat h3 {
         margin: 0;
-        font-size: 2rem;
+        font-size: 1.85rem;
         font-weight: 800;
+        overflow-wrap: anywhere;
+    }
+
+    .hms-stat h3.hms-money-value {
+        font-size: 1.35rem;
     }
 
     .hms-stat p {
@@ -290,6 +300,11 @@ $rootPrefix = ($isAdminPage || $isDoctorPage || $isPatientPage) ? '../' : '';
         font-weight: 650;
     }
 
+    .password-toggle {
+        border-color: var(--hms-border);
+        min-width: 44px;
+    }
+
     .status-pill {
         display: inline-flex;
         align-items: center;
@@ -308,6 +323,7 @@ $rootPrefix = ($isAdminPage || $isDoctorPage || $isPatientPage) ? '../' : '';
 
     .status-approved,
     .status-discharged,
+    .status-completed,
     .status-paid {
         background: #dcfce7;
         color: #166534;
@@ -317,6 +333,13 @@ $rootPrefix = ($isAdminPage || $isDoctorPage || $isPatientPage) ? '../' : '';
     .status-cancelled {
         background: #fee2e2;
         color: #991b1b;
+    }
+
+    .status-rescheduled,
+    .status-partially-paid,
+    .status-not-created {
+        background: #fef3c7;
+        color: #92400e;
     }
 
     .status-unpaid {
@@ -420,8 +443,18 @@ $rootPrefix = ($isAdminPage || $isDoctorPage || $isPatientPage) ? '../' : '';
             grid-template-columns: 1fr;
         }
 
+        .hms-stat-grid {
+            grid-template-columns: 1fr;
+        }
+
         .hms-auth-media {
             min-height: 240px;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 1180px) {
+        .hms-stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 </style>
@@ -471,3 +504,39 @@ $rootPrefix = ($isAdminPage || $isDoctorPage || $isPatientPage) ? '../' : '';
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('click', function (event) {
+    const button = event.target.closest('[data-toggle-password]');
+    if (!button) {
+        return;
+    }
+
+    const target = document.querySelector(button.getAttribute('data-toggle-password'));
+    if (!target) {
+        return;
+    }
+
+    const hidden = target.type === 'password';
+    target.type = hidden ? 'text' : 'password';
+    button.setAttribute('aria-label', hidden ? 'Hide password' : 'Show password');
+    button.innerHTML = hidden ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+});
+
+document.addEventListener('submit', function (event) {
+    const confirmInput = event.target.querySelector('[data-confirm-password]');
+    if (!confirmInput) {
+        return;
+    }
+
+    const passwordInput = event.target.querySelector(confirmInput.getAttribute('data-confirm-password'));
+    if (!passwordInput) {
+        return;
+    }
+
+    confirmInput.setCustomValidity(passwordInput.value === confirmInput.value ? '' : 'Passwords do not match.');
+    if (!confirmInput.checkValidity()) {
+        event.preventDefault();
+        confirmInput.reportValidity();
+    }
+});
+</script>

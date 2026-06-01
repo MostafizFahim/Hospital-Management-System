@@ -15,7 +15,7 @@ if (isset($_POST["login"])) {
     } else {
         $row = db_select_one("SELECT * FROM admin WHERE username = ? LIMIT 1", "s", $username);
 
-        if ($row && password_matches($password, $row['password'])) {
+        if ($row && password_matches($password, $row['password']) && strcasecmp((string) ($row['status'] ?? 'Active'), 'Active') === 0) {
             if (password_is_legacy($row['password'])) {
                 $hash = hash_user_password($password);
                 db_execute("UPDATE admin SET password = ? WHERE id = ?", "si", $hash, $row['id']);
@@ -26,7 +26,7 @@ if (isset($_POST["login"])) {
             exit();
         }
 
-        $error = "Invalid username or password.";
+        $error = "Invalid username, password, or inactive account.";
     }
 }
 ?>

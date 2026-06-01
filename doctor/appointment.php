@@ -17,13 +17,13 @@ include("../include/connection.php");
 include("sidenav.php");
 
 $doctor = $_SESSION['doctor'];
-$appointmentsStmt = mysqli_prepare($connect, "SELECT * FROM appointment WHERE status = 'Approved' AND doctor_username = ? ORDER BY appointment_date ASC, date_booked ASC");
+$appointmentsStmt = mysqli_prepare($connect, "SELECT * FROM appointment WHERE appointment_status = 'Approved' AND doctor_username = ? ORDER BY appointment_date ASC, appointment_time ASC, date_booked ASC");
 mysqli_stmt_bind_param($appointmentsStmt, "s", $doctor);
 mysqli_stmt_execute($appointmentsStmt);
 $appointments = mysqli_stmt_get_result($appointmentsStmt);
 
-$pendingReview = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status = 'Pending' AND doctor_username = ?", "s", $doctor);
-$completed = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status = 'Discharged' AND doctor_username = ?", "s", $doctor);
+$pendingReview = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE appointment_status = 'Pending' AND doctor_username = ?", "s", $doctor);
+$completed = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE appointment_status = 'Completed' AND doctor_username = ?", "s", $doctor);
 ?>
 
 <main class="col-md-10">
@@ -62,6 +62,7 @@ $completed = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status =
                         <th>Gender</th>
                         <th>Phone</th>
                         <th>Appointment</th>
+                        <th>Time</th>
                         <th>Symptoms</th>
                         <th>Booked</th>
                         <th>Action</th>
@@ -69,7 +70,7 @@ $completed = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status =
                 </thead>
                 <tbody>
                     <?php if (mysqli_num_rows($appointments) < 1) { ?>
-                        <tr><td class="hms-empty" colspan="8">No approved appointments are ready yet.</td></tr>
+                        <tr><td class="hms-empty" colspan="9">No approved appointments are ready yet.</td></tr>
                     <?php } ?>
                     <?php while ($row = mysqli_fetch_array($appointments)) { ?>
                         <tr>
@@ -81,6 +82,7 @@ $completed = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status =
                             <td><?php echo e($row['gender']); ?></td>
                             <td><?php echo e($row['phone']); ?></td>
                             <td><?php echo e($row['appointment_date']); ?></td>
+                            <td><?php echo e($row['appointment_time'] ? substr($row['appointment_time'], 0, 5) : '-'); ?></td>
                             <td><?php echo e($row['symptoms']); ?></td>
                             <td><?php echo e($row['date_booked']); ?></td>
                             <td>

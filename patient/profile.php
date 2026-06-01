@@ -20,6 +20,66 @@ if (isset($_POST['update_profile'])) {
     }
 }
 
+if (isset($_POST['update_details'])) {
+    $firstname = trim($_POST['firstname'] ?? '');
+    $surname = trim($_POST['surname'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
+    $address = trim($_POST['address'] ?? '');
+    $gender = trim($_POST['gender'] ?? '');
+
+    if ($firstname === '') {
+        $error = "Enter first name.";
+    } elseif ($surname === '') {
+        $error = "Enter surname.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Enter a valid email.";
+    } elseif (!preg_match('/^[0-9+\-\s]{7,20}$/', $phone)) {
+        $error = "Enter a valid phone number.";
+    } elseif ($address === '') {
+        $error = "Enter address.";
+    } elseif ($gender === '') {
+        $error = "Select gender.";
+    } else {
+        $duplicate = db_select_one("SELECT id FROM patient WHERE email = ? AND username <> ? LIMIT 1", "ss", $email, $patient);
+        if ($duplicate) {
+            $error = "Email already exists.";
+        } else {
+            $fullName = trim($firstname . ' ' . $surname);
+            mysqli_begin_transaction($connect);
+            $updatedPatient = db_execute(
+                "UPDATE patient SET firstname = ?, surname = ?, email = ?, phone = ?, address = ?, gender = ? WHERE username = ?",
+                "sssssss",
+                $firstname,
+                $surname,
+                $email,
+                $phone,
+                $address,
+                $gender,
+                $patient
+            );
+            $updatedAppointments = db_execute(
+                "UPDATE appointment SET firstname = ?, surname = ?, gender = ?, phone = ? WHERE patient_username = ?",
+                "sssss",
+                $firstname,
+                $surname,
+                $gender,
+                $phone,
+                $patient
+            );
+            $updatedIncome = db_execute("UPDATE income SET patient = ? WHERE patient_username = ?", "ss", $fullName, $patient);
+
+            if ($updatedPatient && $updatedAppointments && $updatedIncome) {
+                mysqli_commit($connect);
+                $success = "Profile details updated successfully.";
+            } else {
+                mysqli_rollback($connect);
+                $error = "Could not update profile details.";
+            }
+        }
+    }
+}
+
 if (isset($_POST['change_username'])) {
     $uname = trim($_POST['uname'] ?? '');
 
@@ -78,7 +138,7 @@ if (isset($_POST['update_pass'])) {
     }
 }
 
-$row = db_select_one("SELECT username, profile FROM patient WHERE username = ? LIMIT 1", "s", $patient);
+$row = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $patient);
 $username = $row['username'] ?? $patient;
 $profile = $row['profile'] ?? 'patient.jpg.jpg';
 if (!is_file(__DIR__ . "/img/" . $profile)) {
@@ -133,6 +193,33 @@ include("sidenav.php");
                 </div>
             </div>
             <div class="hms-form-grid">
+                <form method="post">
+                    <p class="eyebrow">Personal</p>
+                    <div class="hms-form-grid">
+                        <div>
+                            <label>First Name</label>
+                            <input type="text" name="firstname" class="form-control" value="<?php echo e($row['firstname'] ?? ''); ?>" required>
+                        </div>
+                        <div>
+                            <label>Surname</label>
+                            <input type="text" name="surname" class="form-control" value="<?php echo e($row['surname'] ?? ''); ?>" required>
+                        </div>
+                    </div>
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" value="<?php echo e($row['email'] ?? ''); ?>" required>
+                    <label>Phone</label>
+                    <input type="text" name="phone" class="form-control" value="<?php echo e($row['phone'] ?? ''); ?>" required>
+                    <label>Gender</label>
+                    <select name="gender" class="form-select" required>
+                        <option value="Male" <?php echo ($row['gender'] ?? '') === 'Male' ? 'selected' : ''; ?>>Male</option>
+                        <option value="Female" <?php echo ($row['gender'] ?? '') === 'Female' ? 'selected' : ''; ?>>Female</option>
+                        <option value="Other" <?php echo ($row['gender'] ?? '') === 'Other' ? 'selected' : ''; ?>>Other</option>
+                    </select>
+                    <label>Address</label>
+                    <textarea name="address" class="form-control" rows="3" required><?php echo e($row['address'] ?? ''); ?></textarea>
+                    <button type="submit" name="update_details" class="btn btn-primary mt-3"><i class="fas fa-save me-1"></i>Save details</button>
+                </form>
+
                 <form method="post">
                     <p class="eyebrow">Identity</p>
                     <label>Username</label>

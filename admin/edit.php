@@ -7,18 +7,21 @@ include("../include/connection.php");
 $id = (int) ($_GET['id'] ?? 0);
 $message = '';
 $error = '';
-$allowedStatuses = ['Pending', 'Approved', 'Rejected'];
+$allowedStatuses = ['Approved', 'Rejected'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $salary = (float) ($_POST['salary'] ?? 0);
+    $consultationFee = (float) ($_POST['consultation_fee'] ?? 0);
     $status = $_POST['status'] ?? '';
 
     if ($salary < 0) {
         $error = "Salary cannot be negative.";
+    } elseif ($consultationFee <= 0) {
+        $error = "Consultation fee must be greater than 0.";
     } elseif (!in_array($status, $allowedStatuses, true)) {
         $error = "Invalid doctor status.";
     } else {
-        db_execute("UPDATE doctors SET salary = ?, status = ? WHERE id = ?", "dsi", $salary, $status, $id);
+        db_execute("UPDATE doctors SET salary = ?, consultation_fee = ?, status = ? WHERE id = ?", "ddsi", $salary, $consultationFee, $status, $id);
         $message = "Doctor profile updated.";
     }
 }
@@ -70,7 +73,13 @@ include("sidenav.php");
                             <tr><th>Email</th><td><?php echo e($doctor['email']); ?></td></tr>
                             <tr><th>Phone</th><td><?php echo e($doctor['phone']); ?></td></tr>
                             <tr><th>Gender</th><td><?php echo e($doctor['gender']); ?></td></tr>
-                            <tr><th>Country</th><td><?php echo e($doctor['country']); ?></td></tr>
+                            <tr><th>Address</th><td><?php echo e($doctor['address']); ?></td></tr>
+                            <tr><th>Qualification</th><td><?php echo e($doctor['qualification']); ?></td></tr>
+                            <tr><th>Specialization</th><td><?php echo e($doctor['specialization']); ?></td></tr>
+                            <tr><th>License Number</th><td><?php echo e($doctor['license_number']); ?></td></tr>
+                            <tr><th>Consultation Fee</th><td><?php echo hms_money($doctor['consultation_fee']); ?></td></tr>
+                            <tr><th>Certification</th><td><?php echo nl2br(e($doctor['certification'])); ?></td></tr>
+                            <tr><th>Experience</th><td><?php echo nl2br(e($doctor['experience'])); ?></td></tr>
                             <tr><th>Registered</th><td><?php echo e($doctor['data_reg']); ?></td></tr>
                         </tbody>
                     </table>
@@ -87,6 +96,9 @@ include("sidenav.php");
                 <form method="post">
                     <label>Salary</label>
                     <input type="number" step="0.01" min="0" name="salary" class="form-control" value="<?php echo e($doctor['salary']); ?>" required>
+
+                    <label>Consultation Fee</label>
+                    <input type="number" step="0.01" min="1" name="consultation_fee" class="form-control" value="<?php echo e($doctor['consultation_fee']); ?>" required>
 
                     <label>Status</label>
                     <select name="status" class="form-select" required>

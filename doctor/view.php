@@ -66,7 +66,7 @@ include("sidenav.php");
                             <tr><th>Email</th><td><?php echo e($patient['email']); ?></td></tr>
                             <tr><th>Phone</th><td><?php echo e($patient['phone']); ?></td></tr>
                             <tr><th>Gender</th><td><?php echo e($patient['gender']); ?></td></tr>
-                            <tr><th>Country</th><td><?php echo e($patient['country']); ?></td></tr>
+                            <tr><th>Address</th><td><?php echo nl2br(e($patient['address'])); ?></td></tr>
                             <tr><th>Date Registered</th><td><?php echo e($patient['date_reg']); ?></td></tr>
                         </tbody>
                     </table>

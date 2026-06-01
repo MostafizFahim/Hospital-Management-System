@@ -9,7 +9,7 @@ $old = [
     'email' => '',
     'phone' => '',
     'gender' => '',
-    'country' => '',
+    'address' => '',
 ];
 
 if (isset($_POST['create'])) {
@@ -19,7 +19,7 @@ if (isset($_POST['create'])) {
     $old['email'] = trim($_POST['email'] ?? '');
     $old['phone'] = trim($_POST['phone'] ?? '');
     $old['gender'] = trim($_POST['gender'] ?? '');
-    $old['country'] = trim($_POST['country'] ?? '');
+    $old['address'] = trim($_POST['address'] ?? '');
     $password = $_POST['pass'] ?? '';
     $confirmPassword = $_POST['con_pass'] ?? '';
 
@@ -41,8 +41,8 @@ if (isset($_POST['create'])) {
         $error = "Enter a valid phone number.";
     } elseif ($old['gender'] === '') {
         $error = "Select gender.";
-    } elseif ($old['country'] === '') {
-        $error = "Select country.";
+    } elseif ($old['address'] === '') {
+        $error = "Enter address.";
     } elseif ($password === '') {
         $error = "Enter password.";
     } elseif (strlen($password) < 6) {
@@ -50,22 +50,22 @@ if (isset($_POST['create'])) {
     } elseif ($confirmPassword !== $password) {
         $error = "Passwords do not match.";
     } else {
-        $exists = db_select_one("SELECT id FROM patient WHERE username = ? OR email = ? LIMIT 1", "ss", $old['uname'], $old['email']);
+        $exists = db_select_one("SELECT id, username, email FROM patient WHERE username = ? OR email = ? LIMIT 1", "ss", $old['uname'], $old['email']);
 
         if ($exists) {
-            $error = "Username or email already exists.";
+            $error = strcasecmp($exists['username'], $old['uname']) === 0 ? "Username already exists." : "Email already exists.";
         } else {
             $passwordHash = hash_user_password($password);
             $created = db_execute(
-                "INSERT INTO patient(firstname, surname, username, email, phone, gender, country, password, date_reg, profile) VALUES(?,?,?,?,?,?,?,?,NOW(),'patient.jpg.jpg')",
+                "INSERT INTO patient(firstname, surname, username, email, phone, address, gender, password, date_reg, profile) VALUES(?,?,?,?,?,?,?,?,NOW(),'patient.jpg.jpg')",
                 "ssssssss",
                 $old['fname'],
                 $old['sname'],
                 $old['uname'],
                 $old['email'],
                 $old['phone'],
+                $old['address'],
                 $old['gender'],
-                $old['country'],
                 $passwordHash
             );
 
@@ -128,36 +128,31 @@ function selected_option($current, $value)
                 <label>Phone</label>
                 <input type="text" name="phone" class="form-control" autocomplete="off" value="<?php echo e($old['phone']); ?>" required>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <label>Gender</label>
-                        <select name="gender" class="form-select" required>
-                            <option value="">Select Gender</option>
-                            <option value="Male" <?php echo selected_option($old['gender'], 'Male'); ?>>Male</option>
-                            <option value="Female" <?php echo selected_option($old['gender'], 'Female'); ?>>Female</option>
-                            <option value="Other" <?php echo selected_option($old['gender'], 'Other'); ?>>Other</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label>Country</label>
-                        <select name="country" class="form-select" required>
-                            <option value="">Select Country</option>
-                            <option value="Bangladesh" <?php echo selected_option($old['country'], 'Bangladesh'); ?>>Bangladesh</option>
-                            <option value="India" <?php echo selected_option($old['country'], 'India'); ?>>India</option>
-                            <option value="Pakistan" <?php echo selected_option($old['country'], 'Pakistan'); ?>>Pakistan</option>
-                            <option value="USA" <?php echo selected_option($old['country'], 'USA'); ?>>USA</option>
-                        </select>
-                    </div>
-                </div>
+                <label>Address</label>
+                <textarea name="address" class="form-control" rows="3" required><?php echo e($old['address']); ?></textarea>
+
+                <label>Gender</label>
+                <select name="gender" class="form-select" required>
+                    <option value="">Select Gender</option>
+                    <option value="Male" <?php echo selected_option($old['gender'], 'Male'); ?>>Male</option>
+                    <option value="Female" <?php echo selected_option($old['gender'], 'Female'); ?>>Female</option>
+                    <option value="Other" <?php echo selected_option($old['gender'], 'Other'); ?>>Other</option>
+                </select>
 
                 <div class="row">
                     <div class="col-md-6">
                         <label>Password</label>
-                        <input type="password" name="pass" class="form-control" autocomplete="new-password" required>
+                        <div class="input-group">
+                            <input type="password" id="patient-password" name="pass" class="form-control" autocomplete="new-password" required>
+                            <button type="button" class="btn btn-outline-secondary password-toggle" data-toggle-password="#patient-password" aria-label="Show password"><i class="fas fa-eye"></i></button>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label>Confirm Password</label>
-                        <input type="password" name="con_pass" class="form-control" autocomplete="new-password" required>
+                        <div class="input-group">
+                            <input type="password" id="patient-confirm-password" name="con_pass" class="form-control" autocomplete="new-password" data-confirm-password="#patient-password" required>
+                            <button type="button" class="btn btn-outline-secondary password-toggle" data-toggle-password="#patient-confirm-password" aria-label="Show password"><i class="fas fa-eye"></i></button>
+                        </div>
                     </div>
                 </div>
 

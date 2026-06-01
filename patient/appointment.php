@@ -20,15 +20,18 @@ $message = '';
 $error = '';
 $pat = $_SESSION['patient'];
 $patient = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $pat);
-$doctors = mysqli_query($connect, "SELECT username, firstname, surname FROM doctors WHERE status = 'Approved' ORDER BY firstname ASC");
+$doctors = mysqli_query($connect, "SELECT username, firstname, surname, consultation_fee FROM doctors WHERE status = 'Approved' ORDER BY firstname ASC");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = trim($_POST['date'] ?? '');
+    $time = trim($_POST['time'] ?? '');
     $doctorUsername = trim($_POST['doctor'] ?? '');
     $symptoms = trim($_POST['sym'] ?? '');
 
     if ($date === '') {
         $error = "Select appointment date.";
+    } elseif ($time === '') {
+        $error = "Select appointment time.";
     } elseif ($doctorUsername === '') {
         $error = "Select a doctor.";
     } elseif ($symptoms === '') {
@@ -38,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $doctor = db_select_one("SELECT username FROM doctors WHERE username = ? AND status = 'Approved' LIMIT 1", "s", $doctorUsername);
         $duplicate = db_select_one(
-            "SELECT id FROM appointment WHERE patient_username = ? AND doctor_username = ? AND appointment_date = ? AND status IN ('Pending', 'Approved') LIMIT 1",
+            "SELECT id FROM appointment WHERE patient_username = ? AND doctor_username = ? AND appointment_date = ? AND appointment_status IN ('Pending', 'Approved', 'Rescheduled') LIMIT 1",
             "sss",
             $pat,
             $doctorUsername,
@@ -51,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "You already have an active appointment with this doctor on that date.";
         } else {
             $created = db_execute(
-                "INSERT INTO appointment(patient_username, doctor_username, firstname, surname, gender, phone, appointment_date, symptoms, status, date_booked) VALUES(?,?,?,?,?,?,?,?,'Pending',NOW())",
-                "ssssssss",
+                "INSERT INTO appointment(patient_username, doctor_username, firstname, surname, gender, phone, appointment_date, appointment_time, symptoms, status, appointment_status, payment_status, prescription_status, date_booked, updated_at) VALUES(?,?,?,?,?,?,?,?,?,'Pending','Pending','Unpaid','Not Created',NOW(),NOW())",
+                "sssssssss",
                 $patient['username'],
                 $doctorUsername,
                 $patient['firstname'],
@@ -60,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $patient['gender'],
                 $patient['phone'],
                 $date,
+                $time,
                 $symptoms
             );
 
@@ -97,12 +101,15 @@ $myAppointments = mysqli_stmt_get_result($myAppointmentsStmt);
                 <label>Appointment Date</label>
                 <input type="date" name="date" class="form-control" min="<?php echo date('Y-m-d'); ?>" required>
 
+                <label>Appointment Time</label>
+                <input type="time" name="time" class="form-control" required>
+
                 <label>Doctor</label>
                 <select name="doctor" class="form-select" required>
                     <option value="">Select Doctor</option>
                     <?php while ($doctor = mysqli_fetch_array($doctors)) { ?>
                         <option value="<?php echo e($doctor['username']); ?>">
-                            Dr. <?php echo e($doctor['firstname'] . ' ' . $doctor['surname']); ?>
+                            Dr. <?php echo e($doctor['firstname'] . ' ' . $doctor['surname']); ?> - <?php echo hms_money($doctor['consultation_fee']); ?>
                         </option>
                     <?php } ?>
                 </select>
@@ -127,18 +134,39 @@ $myAppointments = mysqli_stmt_get_result($myAppointmentsStmt);
                         <tr>
                             <th>Date</th>
                             <th>Doctor</th>
-                            <th>Status</th>
+                            <th>Appointment</th>
+                            <th>Payment</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                     <?php if (mysqli_num_rows($myAppointments) < 1) { ?>
-                        <tr><td colspan="3" class="hms-empty">No appointments yet.</td></tr>
+                        <tr><td colspan="5" class="hms-empty">No appointments yet.</td></tr>
                     <?php } ?>
                     <?php while ($row = mysqli_fetch_array($myAppointments)) { ?>
+                        <?php
+                        $appointmentStatus = hms_appointment_status($row);
+                        $invoice = db_select_one("SELECT id, payment_status FROM income WHERE appointment_id = ? AND patient_username = ? LIMIT 1", "is", $row['id'], $pat);
+                        $paymentStatus = $invoice['payment_status'] ?? ($row['payment_status'] ?? 'Unpaid');
+                        ?>
                         <tr>
-                            <td><?php echo e($row['appointment_date']); ?></td>
+                            <td><?php echo e($row['appointment_date']); ?> <?php echo e($row['appointment_time'] ? substr($row['appointment_time'], 0, 5) : ''); ?></td>
                             <td><?php echo e($row['doctor_username']); ?></td>
-                            <td><span class="status-pill status-<?php echo hms_status_class($row['status']); ?>"><?php echo e($row['status']); ?></span></td>
+                            <td><span class="status-pill status-<?php echo hms_status_class($appointmentStatus); ?>"><?php echo e($appointmentStatus); ?></span></td>
+                            <td><span class="status-pill status-<?php echo hms_status_class($paymentStatus); ?>"><?php echo e($paymentStatus); ?></span></td>
+                            <td>
+                                <?php if ($appointmentStatus === 'Pending') { ?>
+                                    <span class="text-muted small">Waiting for approval</span>
+                                <?php } elseif ($appointmentStatus === 'Approved') { ?>
+                                    <span class="text-muted small">Appointment approved</span>
+                                <?php } elseif ($appointmentStatus === 'Completed' && ($row['prescription_status'] ?? '') === 'Created') { ?>
+                                    <a href="prescription.php?appointment_id=<?php echo e($row['id']); ?>" class="btn btn-sm btn-primary">View prescription</a>
+                                <?php } elseif ($appointmentStatus === 'Rejected') { ?>
+                                    <span class="text-muted small">Rejected</span>
+                                <?php } else { ?>
+                                    <span class="text-muted small"><?php echo e($appointmentStatus); ?></span>
+                                <?php } ?>
+                            </td>
                         </tr>
                     <?php } ?>
                     </tbody>

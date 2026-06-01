@@ -9,7 +9,13 @@ $old = [
     'email' => '',
     'gender' => '',
     'phone' => '',
-    'country' => '',
+    'address' => '',
+    'qualification' => '',
+    'specialization' => '',
+    'license_number' => '',
+    'certification' => '',
+    'experience' => '',
+    'consultation_fee' => '',
 ];
 
 if (isset($_POST['apply'])) {
@@ -19,9 +25,16 @@ if (isset($_POST['apply'])) {
     $old['email'] = trim($_POST['email'] ?? '');
     $old['gender'] = trim($_POST['gender'] ?? '');
     $old['phone'] = trim($_POST['phone'] ?? '');
-    $old['country'] = trim($_POST['country'] ?? '');
+    $old['address'] = trim($_POST['address'] ?? '');
+    $old['qualification'] = trim($_POST['qualification'] ?? '');
+    $old['specialization'] = trim($_POST['specialization'] ?? '');
+    $old['license_number'] = trim($_POST['license_number'] ?? '');
+    $old['certification'] = trim($_POST['certification'] ?? '');
+    $old['experience'] = trim($_POST['experience'] ?? '');
+    $old['consultation_fee'] = trim($_POST['consultation_fee'] ?? '');
     $password = $_POST['pass'] ?? '';
     $confirmPassword = $_POST['con_pass'] ?? '';
+    $hasVerification = $old['license_number'] !== '' || $old['certification'] !== '';
 
     if ($old['fname'] === '') {
         $error = "Enter first name.";
@@ -41,8 +54,18 @@ if (isset($_POST['apply'])) {
         $error = "Enter phone number.";
     } elseif (!preg_match('/^[0-9+\-\s]{7,20}$/', $old['phone'])) {
         $error = "Enter a valid phone number.";
-    } elseif ($old['country'] === '') {
-        $error = "Select country.";
+    } elseif ($old['address'] === '') {
+        $error = "Enter address.";
+    } elseif ($old['specialization'] === '') {
+        $error = "Enter specialization.";
+    } elseif ($old['qualification'] === '') {
+        $error = "Enter qualification.";
+    } elseif (!$hasVerification) {
+        $error = "Enter license number or certification details.";
+    } elseif ($old['experience'] === '') {
+        $error = "Enter experience.";
+    } elseif ($old['consultation_fee'] === '' || (float) $old['consultation_fee'] <= 0) {
+        $error = "Enter a valid consultation fee.";
     } elseif ($password === '') {
         $error = "Enter password.";
     } elseif (strlen($password) < 6) {
@@ -50,23 +73,29 @@ if (isset($_POST['apply'])) {
     } elseif ($confirmPassword !== $password) {
         $error = "Passwords do not match.";
     } else {
-        $exists = db_select_one("SELECT id FROM doctors WHERE username = ? OR email = ? LIMIT 1", "ss", $old['uname'], $old['email']);
+        $exists = db_select_one("SELECT id, username, email FROM doctors WHERE username = ? OR email = ? LIMIT 1", "ss", $old['uname'], $old['email']);
 
         if ($exists) {
-            $error = "Username or email already exists.";
+            $error = strcasecmp($exists['username'], $old['uname']) === 0 ? "Username already exists." : "Email already exists.";
         } else {
             $passwordHash = hash_user_password($password);
             $result = db_execute(
-                "INSERT INTO doctors(firstname, surname, username, email, gender, phone, country, password, salary, data_reg, status, profile) VALUES(?,?,?,?,?,?,?,?,'0',NOW(),'Pending','doctor.jpg')",
-                "ssssssss",
+                "INSERT INTO doctors(firstname, surname, username, email, gender, phone, address, password, salary, consultation_fee, data_reg, status, profile, qualification, specialization, license_number, certification, experience) VALUES(?,?,?,?,?,?,?,?,'0',?,NOW(),'Pending','doctor.jpg',?,?,?,?,?)",
+                "ssssssssdsssss",
                 $old['fname'],
                 $old['sname'],
                 $old['uname'],
                 $old['email'],
                 $old['gender'],
                 $old['phone'],
-                $old['country'],
-                $passwordHash
+                $old['address'],
+                $passwordHash,
+                (float) $old['consultation_fee'],
+                $old['qualification'],
+                $old['specialization'],
+                $old['license_number'],
+                $old['certification'],
+                $old['experience']
             );
 
             if ($result) {
@@ -142,23 +171,46 @@ function selected_option($current, $value)
                     </div>
                 </div>
 
-                <label>Country</label>
-                <select name="country" class="form-select" required>
-                    <option value="">Select Country</option>
-                    <option value="Bangladesh" <?php echo selected_option($old['country'], 'Bangladesh'); ?>>Bangladesh</option>
-                    <option value="India" <?php echo selected_option($old['country'], 'India'); ?>>India</option>
-                    <option value="Pakistan" <?php echo selected_option($old['country'], 'Pakistan'); ?>>Pakistan</option>
-                    <option value="USA" <?php echo selected_option($old['country'], 'USA'); ?>>USA</option>
-                </select>
+                <label>Address</label>
+                <textarea name="address" class="form-control" rows="3" required><?php echo e($old['address']); ?></textarea>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Qualification</label>
+                        <input type="text" name="qualification" class="form-control" value="<?php echo e($old['qualification']); ?>" placeholder="MBBS, FCPS, MD" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Specialization</label>
+                        <input type="text" name="specialization" class="form-control" value="<?php echo e($old['specialization']); ?>" placeholder="Cardiology" required>
+                    </div>
+                </div>
+
+                <label>License Number</label>
+                <input type="text" name="license_number" class="form-control" value="<?php echo e($old['license_number']); ?>">
+
+                <label>Certification / Supporting Information</label>
+                <textarea name="certification" class="form-control" rows="3"><?php echo e($old['certification']); ?></textarea>
+
+                <label>Experience and Profile Summary</label>
+                <textarea name="experience" class="form-control" rows="3" required><?php echo e($old['experience']); ?></textarea>
+
+                <label>Consultation Fee</label>
+                <input type="number" step="0.01" min="1" name="consultation_fee" class="form-control" value="<?php echo e($old['consultation_fee']); ?>" required>
 
                 <div class="row">
                     <div class="col-md-6">
                         <label>Password</label>
-                        <input type="password" name="pass" class="form-control" autocomplete="new-password" required>
+                        <div class="input-group">
+                            <input type="password" id="doctor-password" name="pass" class="form-control" autocomplete="new-password" required>
+                            <button type="button" class="btn btn-outline-secondary password-toggle" data-toggle-password="#doctor-password" aria-label="Show password"><i class="fas fa-eye"></i></button>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label>Confirm Password</label>
-                        <input type="password" name="con_pass" class="form-control" autocomplete="new-password" required>
+                        <div class="input-group">
+                            <input type="password" id="doctor-confirm-password" name="con_pass" class="form-control" autocomplete="new-password" data-confirm-password="#doctor-password" required>
+                            <button type="button" class="btn btn-outline-secondary password-toggle" data-toggle-password="#doctor-confirm-password" aria-label="Show password"><i class="fas fa-eye"></i></button>
+                        </div>
                     </div>
                 </div>
 

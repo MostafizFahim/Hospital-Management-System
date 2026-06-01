@@ -8,8 +8,8 @@ $search = trim($_GET['q'] ?? '');
 
 if ($search !== '') {
     $like = '%' . $search . '%';
-    $stmt = mysqli_prepare($connect, "SELECT * FROM patient WHERE firstname LIKE ? OR surname LIKE ? OR username LIKE ? OR email LIKE ? OR phone LIKE ? ORDER BY date_reg DESC, id DESC");
-    mysqli_stmt_bind_param($stmt, "sssss", $like, $like, $like, $like, $like);
+    $stmt = mysqli_prepare($connect, "SELECT * FROM patient WHERE firstname LIKE ? OR surname LIKE ? OR username LIKE ? OR email LIKE ? OR phone LIKE ? OR address LIKE ? ORDER BY date_reg DESC, id DESC");
+    mysqli_stmt_bind_param($stmt, "ssssss", $like, $like, $like, $like, $like, $like);
     mysqli_stmt_execute($stmt);
     $patients = mysqli_stmt_get_result($stmt);
 } else {
@@ -57,15 +57,14 @@ include("sidenav.php");
                         <th>ID</th>
                         <th>Patient</th>
                         <th>Contact</th>
-                        <th>Gender</th>
-                        <th>Country</th>
+                        <th>Address</th>
                         <th>Registered</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (mysqli_num_rows($patients) < 1) { ?>
-                    <tr><td class="hms-empty" colspan="7">No patients found.</td></tr>
+                    <tr><td class="hms-empty" colspan="6">No patients found.</td></tr>
                 <?php } ?>
                 <?php while ($row = mysqli_fetch_array($patients)) { ?>
                     <tr>
@@ -78,8 +77,7 @@ include("sidenav.php");
                             <?php echo e($row['email']); ?><br>
                             <span class="text-muted small"><?php echo e($row['phone']); ?></span>
                         </td>
-                        <td><?php echo e($row['gender']); ?></td>
-                        <td><?php echo e($row['country']); ?></td>
+                        <td><?php echo e($row['address'] ?: 'Not provided'); ?></td>
                         <td><?php echo e($row['date_reg']); ?></td>
                         <td>
                             <a href="view.php?id=<?php echo e($row['id']); ?>" class="btn btn-sm btn-primary">

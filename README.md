@@ -1,6 +1,6 @@
 # Hospital Management System
 
-A raw PHP, HTML, Bootstrap, and MySQL Hospital Management System for learning full-stack PHP without a framework. The project has separate admin, doctor, and patient panels and now includes a more realistic appointment, discharge, invoice, and prescription workflow.
+A raw PHP, HTML, Bootstrap, and MySQL Hospital Management System for learning full-stack PHP without a framework. The project has separate admin, doctor, and patient panels and now includes a more realistic appointment, consultation, billing, receipt, and prescription workflow.
 
 ## Current Version
 
@@ -14,17 +14,20 @@ Laravel migration notes are included for later learning, but the runnable app is
 - Admin login and dashboard
 - Doctor login and dashboard
 - Patient registration/login/dashboard
-- Doctor application and admin approval/rejection
+- Doctor application with address, specialization, qualification, license, certification, and experience review
+- Admin doctor application review screen before approval/rejection
 - Patient appointment booking with approved doctor selection
-- Admin appointment approval/cancellation before doctor visit
+- Admin appointment approval/rejection/reschedule before doctor visit
 - Doctor appointment queue for approved assigned appointments
-- Doctor discharge workflow with validation
+- Doctor consultation workflow with validation
 - Invoice generation with unpaid/paid/waived payment status
 - Admin billing desk for collecting or waiving invoices
-- Prescription/diagnosis record creation during discharge
-- Patient invoice and prescription view
+- Prescription/diagnosis record creation during consultation
+- Patient bill, receipt, and prescription view
 - Patient report submission
 - Admin reports, income, doctors, patients, job requests, and appointments overview
+- Super Admin controlled administrator management with normal admin read-only visibility
+- Patient address management with unique username/email validation
 - Protected role-based pages
 - Secure logout with full session destruction
 - Password hashing with backward-compatible legacy password upgrade
@@ -35,14 +38,14 @@ Laravel migration notes are included for later learning, but the runnable app is
 
 ## Technologies
 
-| Technology | Purpose |
-|---|---|
-| PHP 8+ | Backend logic |
-| MySQL / MariaDB | Database |
-| HTML | Page structure |
-| Bootstrap 5 | UI styling |
-| jQuery | Existing AJAX support |
-| XAMPP | Recommended local development stack |
+| Technology      | Purpose                             |
+| --------------- | ----------------------------------- |
+| PHP 8+          | Backend logic                       |
+| MySQL / MariaDB | Database                            |
+| HTML            | Page structure                      |
+| Bootstrap 5     | UI styling                          |
+| jQuery          | Existing AJAX support               |
+| XAMPP           | Recommended local development stack |
 
 ## Project Structure
 
@@ -143,36 +146,54 @@ The SQL dump uses hashed passwords, but these plain credentials still work.
 
 ### Admin
 
-| Username | Password |
-|---|---|
-| `Mostafiz` | `12345` |
-| `fahim` | `123` |
+| Username   | Password |
+| ---------- | -------- |
+| `Mostafiz` | `12345`  |
+| `fahim`    | `123`    |
 
 ### Doctor
 
-| Username | Password | Status |
-|---|---|---|
-| `jaman` | `$ new` | Approved |
+| Username | Password | Status   |
+| -------- | -------- | -------- |
+| `jaman`  | `$ new`  | Approved |
 
 ### Patient
 
 | Username | Password |
-|---|---|
-| `jaman` | `12345` |
+| -------- | -------- |
+| `jaman`  | `12345`  |
 
 ## Main URLs
 
-| Page | URL |
-|---|---|
-| Home | `/index.php` |
-| Admin Login | `/adminLogin.php` |
-| Doctor Login | `/doctorlogin.php` |
-| Patient Login | `/patientlogin.php` |
-| Patient Registration | `/account.php` |
-| Doctor Application | `/apply.php` |
-| Admin Dashboard | `/admin/index.php` |
-| Doctor Dashboard | `/doctor/index.php` |
-| Patient Dashboard | `/patient/index.php` |
+| Page                 | URL                  |
+| -------------------- | -------------------- |
+| Home                 | `/index.php`         |
+| Admin Login          | `/adminLogin.php`    |
+| Doctor Login         | `/doctorlogin.php`   |
+| Patient Login        | `/patientlogin.php`  |
+| Patient Registration | `/account.php`       |
+| Doctor Application   | `/apply.php`         |
+| Admin Dashboard      | `/admin/index.php`   |
+| Doctor Dashboard     | `/doctor/index.php`  |
+| Patient Dashboard    | `/patient/index.php` |
+
+## Screenshots To Add
+
+Place screenshots in `docs/screenshots/` with these filenames, then link them in this section.
+
+| Screenshot | Suggested file | Why it matters |
+| ---------- | -------------- | -------------- |
+| Home page | `home.png` | Shows the public landing and navigation |
+| Patient registration | `patient-registration.png` | Shows address/password validation fields |
+| Doctor application | `doctor-application.png` | Shows qualification, license, experience, and consultation fee fields |
+| Admin dashboard | `admin-dashboard.png` | Shows the 8-card real-life HMS overview |
+| Doctor application review | `doctor-application-review.png` | Shows admin credential review before approval/rejection |
+| Appointment management | `admin-appointments.png` | Shows approve/reject/reschedule workflow |
+| Doctor consultation | `doctor-consultation.png` | Shows prescription, dosage, tests, follow-up, and billing form |
+| Patient prescriptions | `patient-prescriptions.png` | Shows prescription visible while bill is unpaid |
+| Admin billing | `admin-billing.png` | Shows unpaid/paid bills, waiver, and mark-paid actions |
+| Patient receipt | `patient-receipt.png` | Shows receipt only after payment is marked paid |
+| Administrator management | `admin-management.png` | Shows Super Admin vs normal admin permissions |
 
 ## Real-Life HMS Workflow
 
@@ -181,17 +202,18 @@ The SQL dump uses hashed passwords, but these plain credentials still work.
 3. Admin reviews the request and approves or cancels the appointment.
 4. Doctor sees only assigned approved appointments.
 5. Doctor checks appointment details.
-6. Doctor discharges the patient with:
+6. Doctor completes the consultation with:
    - invoice fee
    - billing description
    - diagnosis
    - medicine/prescription
    - advice
    - optional follow-up date
-7. The system creates an unpaid invoice.
-8. Admin marks the invoice as paid, unpaid, or waived from the billing desk.
-9. Patient views invoice payment status and prescription details.
-10. Admin tracks appointments, billing, reports, doctors, patients, and job requests.
+7. The appointment becomes completed and the prescription becomes visible immediately.
+8. The system creates an unpaid bill, keeping prescription access separate from payment status.
+9. Admin marks the bill as paid, unpaid, or applies amount/percentage waivers from the billing desk.
+10. Patient views prescription while unpaid, and views/prints receipt only after payment is marked paid.
+11. Admin tracks appointments, billing, reports, doctors, patients, and job requests.
 
 ## Security Improvements
 
@@ -203,6 +225,8 @@ The SQL dump uses hashed passwords, but these plain credentials still work.
 - Output escaping through helper function.
 - Prepared query helpers for safer database operations.
 - Input validation for core forms.
+- Unique username/email validation for patient and doctor accounts.
+- Admin account mutations restricted to one active Super Admin.
 - Profile image upload validation by size/type/extension.
 
 ## Composer And Laravel

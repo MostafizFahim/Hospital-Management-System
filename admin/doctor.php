@@ -20,16 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'reject') {
         db_execute("UPDATE doctors SET status = 'Rejected' WHERE id = ?", "i", $doctorId);
         $message = "Doctor rejected.";
-    } elseif ($action === 'pending') {
-        db_execute("UPDATE doctors SET status = 'Pending' WHERE id = ?", "i", $doctorId);
-        $message = "Doctor moved to pending review.";
     } else {
         $error = "Invalid doctor action.";
     }
 }
 
 $statusFilter = $_GET['status'] ?? 'Approved';
-$allowedStatuses = ['All', 'Pending', 'Approved', 'Rejected'];
+$allowedStatuses = ['Approved', 'Rejected'];
 if (!in_array($statusFilter, $allowedStatuses, true)) {
     $statusFilter = 'Approved';
 }
@@ -39,17 +36,15 @@ $where = [];
 $types = '';
 $params = [];
 
-if ($statusFilter !== 'All') {
-    $where[] = "status = ?";
-    $types .= 's';
-    $params[] = $statusFilter;
-}
+$where[] = "status = ?";
+$types .= 's';
+$params[] = $statusFilter;
 
 if ($search !== '') {
-    $where[] = "(firstname LIKE ? OR surname LIKE ? OR username LIKE ? OR email LIKE ? OR phone LIKE ?)";
+    $where[] = "(firstname LIKE ? OR surname LIKE ? OR username LIKE ? OR email LIKE ? OR phone LIKE ? OR specialization LIKE ? OR license_number LIKE ?)";
     $like = '%' . $search . '%';
-    $types .= 'sssss';
-    array_push($params, $like, $like, $like, $like, $like);
+    $types .= 'sssssss';
+    array_push($params, $like, $like, $like, $like, $like, $like, $like);
 }
 
 $sql = "SELECT * FROM doctors";
@@ -120,8 +115,8 @@ include("sidenav.php");
                         <th>ID</th>
                         <th>Doctor</th>
                         <th>Contact</th>
-                        <th>Gender</th>
-                        <th>Country</th>
+                        <th>Specialty</th>
+                        <th>Consult Fee</th>
                         <th>Salary</th>
                         <th>Status</th>
                         <th>Registered</th>
@@ -143,8 +138,11 @@ include("sidenav.php");
                             <?php echo e($row['email']); ?><br>
                             <span class="text-muted small"><?php echo e($row['phone']); ?></span>
                         </td>
-                        <td><?php echo e($row['gender']); ?></td>
-                        <td><?php echo e($row['country']); ?></td>
+                        <td>
+                            <?php echo e($row['specialization'] ?: 'Not set'); ?><br>
+                            <span class="text-muted small"><?php echo e($row['license_number'] ?: 'No license recorded'); ?></span>
+                        </td>
+                        <td><?php echo hms_money($row['consultation_fee']); ?></td>
                         <td><?php echo hms_money($row['salary']); ?></td>
                         <td><span class="status-pill status-<?php echo hms_status_class($row['status']); ?>"><?php echo e($row['status']); ?></span></td>
                         <td><?php echo e($row['data_reg']); ?></td>
@@ -158,9 +156,6 @@ include("sidenav.php");
                                     <?php } ?>
                                     <?php if ($row['status'] !== 'Rejected') { ?>
                                         <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">Reject</button>
-                                    <?php } ?>
-                                    <?php if ($row['status'] !== 'Pending') { ?>
-                                        <button type="submit" name="action" value="pending" class="btn btn-sm btn-outline-secondary">Review</button>
                                     <?php } ?>
                                 </form>
                             </div>

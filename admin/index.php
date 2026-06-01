@@ -19,16 +19,15 @@ include("sidenav.php");
 $adminCount = hms_count("SELECT COUNT(*) AS total FROM admin");
 $doctorCount = hms_count("SELECT COUNT(*) AS total FROM doctors WHERE status = 'Approved'");
 $patientCount = hms_count("SELECT COUNT(*) AS total FROM patient");
-$pendingAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status = 'Pending'");
-$approvedToday = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status = 'Approved' AND appointment_date = CURDATE()");
+$pendingAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE appointment_status = 'Pending'");
+$approvedAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE appointment_status = 'Approved'");
+$completedAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE appointment_status = 'Completed'");
 $pendingJobs = hms_count("SELECT COUNT(*) AS total FROM doctors WHERE status = 'Pending'");
 $unpaidInvoices = hms_count("SELECT COUNT(*) AS total FROM income WHERE payment_status = 'Unpaid'");
 $incomeRow = db_select_one("SELECT COALESCE(SUM(GREATEST(amount_paid - waived_amount, 0)), 0) AS total FROM income WHERE payment_status = 'Paid'");
-$waivedRow = db_select_one("SELECT COALESCE(SUM(waived_amount), 0) AS total FROM income");
 $paidIncome = (float) ($incomeRow['total'] ?? 0);
-$waivedIncome = (float) ($waivedRow['total'] ?? 0);
 
-$todayAppointments = mysqli_query($connect, "SELECT * FROM appointment WHERE appointment_date = CURDATE() AND status = 'Approved' ORDER BY date_booked DESC LIMIT 6");
+$todayAppointments = mysqli_query($connect, "SELECT * FROM appointment WHERE appointment_date = CURDATE() AND appointment_status = 'Approved' ORDER BY appointment_time ASC, date_booked DESC LIMIT 6");
 $billingQueue = mysqli_query($connect, "SELECT * FROM income WHERE payment_status = 'Unpaid' ORDER BY date_discharge DESC LIMIT 6");
 ?>
 
@@ -45,61 +44,61 @@ $billingQueue = mysqli_query($connect, "SELECT * FROM income WHERE payment_statu
     </div>
 
     <section class="hms-stat-grid">
-        <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
+        <a href="patient.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Total patients</p>
+                <h3><?php echo $patientCount; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-procedures"></i></span>
+        </a>
+        <a href="doctor.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Total doctors</p>
+                <h3><?php echo $doctorCount; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-user-md"></i></span>
+        </a>
+        <a href="job_request.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Pending doctor applications</p>
+                <h3><?php echo $pendingJobs; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-clipboard-list"></i></span>
+        </a>
+        <a href="appointment.php?status=Pending" class="hms-card hms-stat text-decoration-none text-reset">
             <div>
                 <p>Pending appointments</p>
                 <h3><?php echo $pendingAppointments; ?></h3>
             </div>
             <span class="hms-stat-icon"><i class="fas fa-calendar-plus"></i></span>
         </a>
-        <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
+        <a href="appointment.php?status=Approved" class="hms-card hms-stat text-decoration-none text-reset">
             <div>
-                <p>Approved today</p>
-                <h3><?php echo $approvedToday; ?></h3>
+                <p>Approved appointments</p>
+                <h3><?php echo $approvedAppointments; ?></h3>
             </div>
             <span class="hms-stat-icon"><i class="fas fa-calendar-day"></i></span>
         </a>
-        <a href="income.php" class="hms-card hms-stat text-decoration-none text-reset">
+        <a href="appointment.php?status=Completed" class="hms-card hms-stat text-decoration-none text-reset">
             <div>
-                <p>Unpaid invoices</p>
+                <p>Completed appointments</p>
+                <h3><?php echo $completedAppointments; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-notes-medical"></i></span>
+        </a>
+        <a href="income.php?status=Unpaid" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Unpaid bills</p>
                 <h3><?php echo $unpaidInvoices; ?></h3>
             </div>
             <span class="hms-stat-icon"><i class="fas fa-receipt"></i></span>
         </a>
-        <a href="income.php" class="hms-card hms-stat text-decoration-none text-reset">
+        <a href="income.php?status=Paid" class="hms-card hms-stat text-decoration-none text-reset">
             <div>
                 <p>Collected income</p>
-                <h3><?php echo hms_money($paidIncome); ?></h3>
+                <h3 class="hms-money-value"><?php echo hms_money($paidIncome); ?></h3>
             </div>
             <span class="hms-stat-icon"><i class="fas fa-money-check-alt"></i></span>
-        </a>
-        <a href="doctor.php" class="hms-card hms-stat text-decoration-none text-reset">
-            <div>
-                <p>Approved doctors</p>
-                <h3><?php echo $doctorCount; ?></h3>
-            </div>
-            <span class="hms-stat-icon"><i class="fas fa-user-md"></i></span>
-        </a>
-        <a href="patient.php" class="hms-card hms-stat text-decoration-none text-reset">
-            <div>
-                <p>Registered patients</p>
-                <h3><?php echo $patientCount; ?></h3>
-            </div>
-            <span class="hms-stat-icon"><i class="fas fa-procedures"></i></span>
-        </a>
-        <a href="job_request.php" class="hms-card hms-stat text-decoration-none text-reset">
-            <div>
-                <p>Doctor requests</p>
-                <h3><?php echo $pendingJobs; ?></h3>
-            </div>
-            <span class="hms-stat-icon"><i class="fas fa-clipboard-list"></i></span>
-        </a>
-        <a href="admin.php" class="hms-card hms-stat text-decoration-none text-reset">
-            <div>
-                <p>Waived bills</p>
-                <h3><?php echo hms_money($waivedIncome); ?></h3>
-            </div>
-            <span class="hms-stat-icon"><i class="fas fa-hand-holding-heart"></i></span>
         </a>
     </section>
 

@@ -13,9 +13,8 @@ $output .= "
             <th>Firstname</th>
             <th>Surname</th>
             <th>Username</th>
-            <th>Gender</th>
-            <th>Phone</th>
-            <th>Country</th>
+            <th>Contact</th>
+            <th>Verification</th>
             <th>Date Registered</th>
             <th>Action</th>
         </tr>
@@ -33,21 +32,11 @@ while ($row = mysqli_fetch_assoc($res)) {
             <td>" . e($row['firstname']) . "</td>
             <td>" . e($row['surname']) . "</td>
             <td>" . e($row['username']) . "</td>
-            <td>" . e($row['gender']) . "</td>
-            <td>" . e($row['phone']) . "</td>
-            <td>" . e($row['country']) . "</td>
+            <td>" . e($row['email']) . "<br><span class='text-muted small'>" . e($row['phone']) . "</span></td>
+            <td>" . e($row['specialization'] ?: 'No specialization') . "<br><span class='text-muted small'>" . e($row['license_number'] ?: ($row['qualification'] ?: 'Verification details pending')) . "</span></td>
             <td>" . e($row['data_reg']) . "</td>
             <td>
-                <div class='col-md-12'>
-                    <div class='row'>
-                        <div class='col-md-6'>
-                            <button id='" . $id . "' class='btn btn-success approve'>Approve</button>
-                        </div>
-                        <div class='col-md-6'>
-                            <button id='" . $id . "' class='btn btn-danger reject'>Reject</button>
-                        </div>
-                    </div>
-                </div>
+                <a href='review_doctor.php?id=" . $id . "' class='btn btn-primary btn-sm'>Review</a>
             </td>
         </tr>
     ";

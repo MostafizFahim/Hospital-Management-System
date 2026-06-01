@@ -17,12 +17,12 @@ include("../include/connection.php");
 include("sidenav.php");
 
 $doctor = $_SESSION['doctor'];
-$approvedQueue = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND status = 'Approved'", "s", $doctor);
-$pendingApproval = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND status = 'Pending'", "s", $doctor);
-$completedVisits = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND status = 'Discharged'", "s", $doctor);
+$approvedQueue = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND appointment_status = 'Approved'", "s", $doctor);
+$pendingApproval = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND appointment_status = 'Pending'", "s", $doctor);
+$completedVisits = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND appointment_status = 'Completed'", "s", $doctor);
 $patientCount = hms_count("SELECT COUNT(DISTINCT patient_username) AS total FROM appointment WHERE doctor_username = ?", "s", $doctor);
 
-$todayStmt = mysqli_prepare($connect, "SELECT * FROM appointment WHERE doctor_username = ? AND appointment_date = CURDATE() ORDER BY date_booked ASC LIMIT 6");
+$todayStmt = mysqli_prepare($connect, "SELECT * FROM appointment WHERE doctor_username = ? AND appointment_date = CURDATE() AND appointment_status = 'Approved' ORDER BY appointment_time ASC, date_booked ASC LIMIT 6");
 mysqli_stmt_bind_param($todayStmt, "s", $doctor);
 mysqli_stmt_execute($todayStmt);
 $todayAppointments = mysqli_stmt_get_result($todayStmt);
@@ -95,9 +95,10 @@ $todayAppointments = mysqli_stmt_get_result($todayStmt);
                         <td><?php echo e($row['firstname'] . ' ' . $row['surname']); ?></td>
                         <td><?php echo e($row['phone']); ?></td>
                         <td><?php echo e($row['symptoms']); ?></td>
-                        <td><span class="status-pill status-<?php echo hms_status_class($row['status']); ?>"><?php echo e($row['status']); ?></span></td>
+                        <?php $appointmentStatus = hms_appointment_status($row); ?>
+                        <td><span class="status-pill status-<?php echo hms_status_class($appointmentStatus); ?>"><?php echo e($appointmentStatus); ?></span></td>
                         <td>
-                            <?php if ($row['status'] === 'Approved') { ?>
+                            <?php if ($appointmentStatus === 'Approved') { ?>
                                 <a href="discharge.php?id=<?php echo e($row['id']); ?>" class="btn btn-sm btn-primary">Check</a>
                             <?php } else { ?>
                                 <span class="text-muted small">Waiting</span>

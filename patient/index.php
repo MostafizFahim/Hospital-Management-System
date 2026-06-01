@@ -34,10 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$activeAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE patient_username = ? AND status IN ('Pending', 'Approved')", "s", $patient);
-$completedAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE patient_username = ? AND status = 'Discharged'", "s", $patient);
+$totalAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE patient_username = ?", "s", $patient);
+$pendingAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE patient_username = ? AND appointment_status = 'Pending'", "s", $patient);
+$approvedAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE patient_username = ? AND appointment_status = 'Approved'", "s", $patient);
+$completedAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE patient_username = ? AND appointment_status = 'Completed'", "s", $patient);
 $unpaidInvoices = hms_count("SELECT COUNT(*) AS total FROM income WHERE patient_username = ? AND payment_status = 'Unpaid'", "s", $patient);
-$paidInvoices = hms_count("SELECT COUNT(*) AS total FROM income WHERE patient_username = ? AND payment_status = 'Paid'", "s", $patient);
+$prescriptionsCount = hms_count("SELECT COUNT(*) AS total FROM prescriptions WHERE patient_username = ?", "s", $patient);
 
 $appointmentsStmt = mysqli_prepare($connect, "SELECT * FROM appointment WHERE patient_username = ? ORDER BY appointment_date DESC, date_booked DESC LIMIT 5");
 mysqli_stmt_bind_param($appointmentsStmt, "s", $patient);
@@ -60,24 +62,38 @@ $appointments = mysqli_stmt_get_result($appointmentsStmt);
     <section class="hms-stat-grid">
         <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
             <div>
-                <p>Active appointments</p>
-                <h3><?php echo $activeAppointments; ?></h3>
+                <p>Total appointments</p>
+                <h3><?php echo $totalAppointments; ?></h3>
             </div>
             <span class="hms-stat-icon"><i class="fas fa-calendar-check"></i></span>
         </a>
+        <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Pending appointments</p>
+                <h3><?php echo $pendingAppointments; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-hourglass-half"></i></span>
+        </a>
+        <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Approved appointments</p>
+                <h3><?php echo $approvedAppointments; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-calendar-day"></i></span>
+        </a>
         <a href="invoice.php" class="hms-card hms-stat text-decoration-none text-reset">
             <div>
-                <p>Unpaid invoices</p>
+                <p>Unpaid bills</p>
                 <h3><?php echo $unpaidInvoices; ?></h3>
             </div>
             <span class="hms-stat-icon"><i class="fas fa-receipt"></i></span>
         </a>
-        <a href="invoice.php" class="hms-card hms-stat text-decoration-none text-reset">
+        <a href="prescription.php" class="hms-card hms-stat text-decoration-none text-reset">
             <div>
-                <p>Paid invoices</p>
-                <h3><?php echo $paidInvoices; ?></h3>
+                <p>Prescriptions</p>
+                <h3><?php echo $prescriptionsCount; ?></h3>
             </div>
-            <span class="hms-stat-icon"><i class="fas fa-money-check-alt"></i></span>
+            <span class="hms-stat-icon"><i class="fas fa-file-prescription"></i></span>
         </a>
         <div class="hms-card hms-stat">
             <div>
@@ -115,7 +131,8 @@ $appointments = mysqli_stmt_get_result($appointmentsStmt);
                             <td><?php echo e($row['appointment_date']); ?></td>
                             <td><?php echo e($row['doctor_username']); ?></td>
                             <td><?php echo e($row['symptoms']); ?></td>
-                            <td><span class="status-pill status-<?php echo hms_status_class($row['status']); ?>"><?php echo e($row['status']); ?></span></td>
+                            <?php $appointmentStatus = hms_appointment_status($row); ?>
+                            <td><span class="status-pill status-<?php echo hms_status_class($appointmentStatus); ?>"><?php echo e($appointmentStatus); ?></span></td>
                         </tr>
                     <?php } ?>
                     </tbody>

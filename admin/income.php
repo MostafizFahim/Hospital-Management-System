@@ -10,16 +10,18 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $invoiceId = (int) ($_POST['invoice_id'] ?? 0);
     $action = $_POST['action'] ?? '';
-    $invoice = db_select_one("SELECT id, amount_paid, waived_amount, payment_status FROM income WHERE id = ? LIMIT 1", "i", $invoiceId);
+    $invoice = db_select_one("SELECT id, appointment_id, amount_paid, waived_amount, payment_status FROM income WHERE id = ? LIMIT 1", "i", $invoiceId);
 
     if (!$invoice) {
         $error = "Invoice not found.";
     } elseif ($action === 'paid') {
         if (hms_invoice_due($invoice) <= 0) {
-            db_execute("UPDATE income SET payment_status = 'Waived', paid_at = NULL WHERE id = ?", "i", $invoiceId);
+            db_execute("UPDATE income SET payment_status = 'Waived', paid_at = NULL, updated_at = NOW() WHERE id = ?", "i", $invoiceId);
+            db_execute("UPDATE appointment SET payment_status = 'Waived', updated_at = NOW() WHERE id = ?", "i", $invoice['appointment_id']);
             $message = "Invoice is fully waived, so it was marked waived instead of paid.";
         } else {
-            db_execute("UPDATE income SET payment_status = 'Paid', paid_at = NOW() WHERE id = ?", "i", $invoiceId);
+            db_execute("UPDATE income SET payment_status = 'Paid', paid_at = NOW(), updated_at = NOW() WHERE id = ?", "i", $invoiceId);
+            db_execute("UPDATE appointment SET payment_status = 'Paid', updated_at = NOW() WHERE id = ?", "i", $invoice['appointment_id']);
             $message = "Invoice marked as paid.";
         }
     } elseif ($action === 'apply_waiver') {
@@ -39,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $waiverAmount = min($invoiceTotal, round($waiverAmount, 2));
                 $newStatus = $waiverAmount >= $invoiceTotal ? 'Waived' : 'Unpaid';
 
-                db_execute("UPDATE income SET waived_amount = ?, payment_status = ?, paid_at = NULL WHERE id = ?", "dsi", $waiverAmount, $newStatus, $invoiceId);
+                db_execute("UPDATE income SET waived_amount = ?, payment_status = ?, paid_at = NULL, updated_at = NOW() WHERE id = ?", "dsi", $waiverAmount, $newStatus, $invoiceId);
+                db_execute("UPDATE appointment SET payment_status = ?, updated_at = NOW() WHERE id = ?", "si", $newStatus, $invoice['appointment_id']);
                 $message = $newStatus === 'Waived' ? "Invoice fully waived." : "Partial waiver applied. Remaining balance is still unpaid.";
             }
         }
@@ -47,11 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($invoice['payment_status'] === 'Paid') {
             $error = "Move the invoice back to unpaid before clearing waiver.";
         } else {
-            db_execute("UPDATE income SET waived_amount = 0, payment_status = 'Unpaid', paid_at = NULL WHERE id = ?", "i", $invoiceId);
+            db_execute("UPDATE income SET waived_amount = 0, payment_status = 'Unpaid', paid_at = NULL, updated_at = NOW() WHERE id = ?", "i", $invoiceId);
+            db_execute("UPDATE appointment SET payment_status = 'Unpaid', updated_at = NOW() WHERE id = ?", "i", $invoice['appointment_id']);
             $message = "Waiver cleared.";
         }
     } elseif ($action === 'unpaid') {
-        db_execute("UPDATE income SET payment_status = 'Unpaid', paid_at = NULL WHERE id = ?", "i", $invoiceId);
+        db_execute("UPDATE income SET payment_status = 'Unpaid', paid_at = NULL, updated_at = NOW() WHERE id = ?", "i", $invoiceId);
+        db_execute("UPDATE appointment SET payment_status = 'Unpaid', updated_at = NOW() WHERE id = ?", "i", $invoice['appointment_id']);
         $message = "Invoice moved back to unpaid.";
     } else {
         $error = "Invalid billing action.";
@@ -145,8 +150,10 @@ include("sidenav.php");
                     <tr>
                         <th>ID</th>
                         <th>Patient</th>
-                        <th>Discharged</th>
-                        <th>Charge</th>
+                        <th>Created</th>
+                        <th>Consult</th>
+                        <th>Extra</th>
+                        <th>Total</th>
                         <th>Waived</th>
                         <th>Due</th>
                         <th>Status</th>
@@ -156,7 +163,7 @@ include("sidenav.php");
                 </thead>
                 <tbody>
                 <?php if (mysqli_num_rows($res) < 1) { ?>
-                    <tr><td class="hms-empty" colspan="9">No invoices found.</td></tr>
+                    <tr><td class="hms-empty" colspan="11">No invoices found.</td></tr>
                 <?php } ?>
                 <?php while ($row = mysqli_fetch_array($res)) {
                     $due = hms_invoice_due($row);
@@ -167,7 +174,9 @@ include("sidenav.php");
                             <strong><?php echo e($row['patient']); ?></strong><br>
                             <span class="text-muted small">Dr. <?php echo e($row['doctor']); ?></span>
                         </td>
-                        <td><?php echo e($row['date_discharge']); ?></td>
+                        <td><?php echo e($row['created_at'] ?: $row['date_discharge']); ?></td>
+                        <td><?php echo hms_money($row['consultation_fee']); ?></td>
+                        <td><?php echo hms_money($row['additional_charges']); ?></td>
                         <td><?php echo hms_money($row['amount_paid']); ?></td>
                         <td><?php echo hms_money($row['waived_amount']); ?></td>
                         <td><?php echo hms_money($due); ?></td>
