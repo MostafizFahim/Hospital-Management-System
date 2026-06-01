@@ -8,73 +8,73 @@ require_login("patient", "../patientlogin.php");
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>My Invoice</title>
+    <title>My Invoices</title>
 </head>
 <body>
-    <?php
-    include("../include/header.php");
-    include("../include/connection.php"); 
-    ?>
-    <div class="container-fluid">
-        <div class="col-md-12">
-            <div class="row">
-                <div class="col-md-2" style="margin-Left: -30px;">
-                    <?php
-                    include("sidenav.php");
-                    ?>
-                </div>
-            </div>
+<?php
+include("../include/header.php");
+include("../include/connection.php");
+include("sidenav.php");
+
+$pat = $_SESSION['patient'];
+$stmt = mysqli_prepare($connect, "SELECT * FROM income WHERE patient_username = ? ORDER BY date_discharge DESC");
+mysqli_stmt_bind_param($stmt, "s", $pat);
+mysqli_stmt_execute($stmt);
+$res = mysqli_stmt_get_result($stmt);
+
+$unpaidTotal = db_select_one("SELECT COALESCE(SUM(GREATEST(amount_paid - waived_amount, 0)), 0) AS total FROM income WHERE patient_username = ? AND payment_status = 'Unpaid'", "s", $pat);
+?>
+
+<main class="col-md-10">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Billing</p>
+            <h4>My Invoices</h4>
+        </div>
+        <span class="status-pill status-unpaid">Outstanding <?php echo hms_money($unpaidTotal['total'] ?? 0); ?></span>
+    </div>
+
+    <div class="hms-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Doctor</th>
+                        <th>Discharged</th>
+                        <th>Charge</th>
+                        <th>Waived</th>
+                        <th>Due</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php if (mysqli_num_rows($res) < 1) { ?>
+                    <tr><td class="hms-empty" colspan="9">No invoices yet.</td></tr>
+                <?php } ?>
+                <?php while ($row = mysqli_fetch_array($res)) { ?>
+                    <tr>
+                        <td><?php echo e($row['id']); ?></td>
+                        <td><?php echo e($row['doctor']); ?></td>
+                        <td><?php echo e($row['date_discharge']); ?></td>
+                        <td><?php echo hms_money($row['amount_paid']); ?></td>
+                        <td><?php echo hms_money($row['waived_amount']); ?></td>
+                        <td><?php echo hms_money(hms_invoice_due($row)); ?></td>
+                        <td><span class="status-pill status-<?php echo hms_status_class($row['payment_status']); ?>"><?php echo e($row['payment_status']); ?></span></td>
+                        <td><?php echo e($row['description']); ?></td>
+                        <td>
+                            <a href="view.php?id=<?php echo e($row['id']); ?>" class="btn btn-sm btn-primary">
+                                <i class="fas fa-file-medical-alt me-1"></i>View
+                            </a>
+                        </td>
+                    </tr>
+                <?php } ?>
+                </tbody>
+            </table>
         </div>
     </div>
-    <div class="col-md-10">
-        <h5 class="text-center my-2">My Invoice</h5>
-        <?php
-            
-            
-                $pat = $_SESSION['patient'];
-                $res = mysqli_query($connect,"SELECT * FROM income WHERE patient_username ='$pat' ORDER BY date_discharge DESC");
-                echo "<table class='table table-bordered'>
-                            <tr>
-                                <td>ID</td>
-                                <td>Doctor</td>
-                                <td>Patient</td>
-                                <td>Date of discharge</td>
-                                <td>Amount Paid</td>
-                                <td>Description</td>
-                                <td>Action</td>
-                                
-                            </tr>";
-
-                    if (mysqli_num_rows($res) < 1) {
-                        echo "<tr>
-                                <td class='text-center' colspan='10'>No Invoice Yet</td>
-                            </tr>";
-                    }
-
-                    while ($row = mysqli_fetch_array($res)) {
-                        echo "<tr>
-                                <td>".e($row['id'])."</td>
-                                <td>".e($row['doctor'])."</td>
-                                <td>".e($row['patient'])."</td>
-                                <td>".e($row['date_discharge'])."</td>
-                                <td>".e($row['amount_paid'])."</td>
-                                <td>".e($row['description'])."</td>
-                                <td>
-                        <a href='view.php?id=".e($row['id'])."'>
-                        <button class='btn btn-info'>View</button>
-
-                        </a>
-
-                    </td>
-                                
-                                
-                            </tr>";
-                    }
-
-                    echo "</table>";
-                    ?>
-  
-        </div>
-
+</main>
 </body>
 </html>

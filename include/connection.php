@@ -66,6 +66,63 @@ function db_execute($sql, $types = '', ...$params)
     return mysqli_stmt_execute($stmt);
 }
 
+function db_column_exists($table, $column)
+{
+    global $connect, $database;
+
+    $row = db_select_one(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1",
+        "sss",
+        $database,
+        $table,
+        $column
+    );
+
+    return !empty($row);
+}
+
+function hms_ensure_schema()
+{
+    global $connect;
+
+    if (!db_column_exists('income', 'payment_status')) {
+        mysqli_query($connect, "ALTER TABLE income ADD payment_status varchar(30) NOT NULL DEFAULT 'Unpaid' AFTER amount_paid");
+    }
+
+    if (!db_column_exists('income', 'waived_amount')) {
+        mysqli_query($connect, "ALTER TABLE income ADD waived_amount decimal(10,2) NOT NULL DEFAULT 0.00 AFTER amount_paid");
+    }
+
+    if (!db_column_exists('income', 'paid_at')) {
+        mysqli_query($connect, "ALTER TABLE income ADD paid_at varchar(100) DEFAULT NULL AFTER payment_status");
+    }
+}
+
+function hms_count($sql, $types = '', ...$params)
+{
+    $row = db_select_one($sql, $types, ...$params);
+    return (int) ($row['total'] ?? 0);
+}
+
+function hms_money($amount)
+{
+    return 'BDT ' . number_format((float) $amount, 2);
+}
+
+function hms_invoice_due($invoice)
+{
+    $amount = (float) ($invoice['amount_paid'] ?? 0);
+    $waived = (float) ($invoice['waived_amount'] ?? 0);
+    return max(0, $amount - $waived);
+}
+
+function hms_status_class($status)
+{
+    return strtolower(str_replace(' ', '-', (string) $status));
+}
+
+hms_ensure_schema();
+
 function is_valid_image_upload($file, &$error = '')
 {
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {

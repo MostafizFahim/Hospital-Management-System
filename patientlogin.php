@@ -2,84 +2,67 @@
 session_start();
 include("include/connection.php");
 
-if(isset($_POST['login'])){
+$error = '';
+$success = isset($_GET['registered']) ? "Account created successfully. You can login now." : '';
 
-	$uname = trim($_POST['uname'] ?? '');
-	$pass = $_POST['pass'] ?? '';
+if (isset($_POST['login'])) {
+    $uname = trim($_POST['uname'] ?? '');
+    $pass = $_POST['pass'] ?? '';
 
-	if(empty($uname)){
-		echo "<script>alert('Enter Username')</script>";
+    if ($uname === '') {
+        $error = "Enter username.";
+    } elseif ($pass === '') {
+        $error = "Enter password.";
+    } else {
+        $row = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $uname);
 
-	}else if(empty($pass)){
-		echo "<script>alert('Enter Password')</script>";
+        if ($row && password_matches($pass, $row['password'])) {
+            if (password_is_legacy($row['password'])) {
+                $hash = hash_user_password($pass);
+                db_execute("UPDATE patient SET password = ? WHERE id = ?", "si", $hash, $row['id']);
+            }
+            session_regenerate_id(true);
+            $_SESSION['patient'] = $uname;
+            header("Location: patient/index.php");
+            exit();
+        }
 
-	}else {
-		$row = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $uname);
-
-		if($row && password_matches($pass, $row['password'])){
-			if (password_is_legacy($row['password'])) {
-				$hash = hash_user_password($pass);
-				db_execute("UPDATE patient SET password = ? WHERE id = ?", "si", $hash, $row['id']);
-			}
-			session_regenerate_id(true);
-			$_SESSION['patient'] = $uname;
-			header("Location: patient/index.php");
-			exit();
-
-		}else{
-			echo "<script>alert('Invalid Account')</script>";
-		}
-
-
-	}
+        $error = "Invalid account.";
+    }
 }
-
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Patient Login Page</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Patient Login</title>
 </head>
-<body style="background-image: url(img/back.jpg); background-repeat: no-repeat; background-size: cover;">
+<body>
+<?php include("include/header.php"); ?>
+<main class="hms-auth-shell">
+    <section class="hms-card hms-auth-card">
+        <div class="hms-auth-media" style="background-image: linear-gradient(rgba(17,24,39,.50), rgba(17,24,39,.72)), url('img/Patient.jpg');">
+            <p class="eyebrow text-white">Patient Portal</p>
+            <h2 class="fw-bold">Book appointments, follow prescriptions, and track invoices.</h2>
+        </div>
+        <div class="hms-auth-form">
+            <h4 class="fw-bold mb-1">Patient Login</h4>
+            <p class="text-muted mb-4">Access your appointment and billing dashboard.</p>
+            <?php if ($error) { ?><div class="hms-alert hms-alert-danger"><?php echo e($error); ?></div><?php } ?>
+            <?php if ($success) { ?><div class="hms-alert hms-alert-success"><?php echo e($success); ?></div><?php } ?>
+            <form method="post">
+                <label>Username</label>
+                <input type="text" name="uname" class="form-control" autocomplete="off" placeholder="Enter username" required>
 
-	<?php
+                <label>Password</label>
+                <input type="password" name="pass" class="form-control" autocomplete="off" placeholder="Enter password" required>
 
-		include("include/header.php");
-	?>
-
-	<div class="container-fluid">
-		<div class="col-md-12">
-			<div class="row">
-				<div class="col-md-3"></div>
-				<div class="col-md-6 my-5 card my-5">
-					<h5 class="text-center my-3">Patient Login</h5>
-
-					<form method="post">
-						<div class="form-group">
-							<label>Username</label>
-							<input type="text" name="uname" class="form-control" autocomplete="off" placeholder="Enter Username">
-							
-						</div>
-						<div class="form-group">
-							<label>Password</label>
-							<input type="password" name="pass" class="form-control" autocomplete="off" placeholder="Enter Password">
-							
-
-						</div>
-						<input type="submit" name="login" class=" btn btn-info my-3" value="Login">
-						<p>I don't have an account <a href="account.php">Click Here</a></p>
-					</form>
-					
-				</div>
-				<div class="col-md-3"></div>
-			</div>
-			
-		</div>
-		
-	</div>
-
+                <button type="submit" name="login" class="btn btn-primary w-100 mt-3"><i class="fas fa-sign-in-alt me-1"></i>Login</button>
+                <p class="mt-3 mb-0">Need a patient account? <a href="account.php">Create one</a></p>
+            </form>
+        </div>
+    </section>
+</main>
 </body>
 </html>

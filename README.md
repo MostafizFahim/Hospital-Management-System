@@ -16,9 +16,11 @@ Laravel migration notes are included for later learning, but the runnable app is
 - Patient registration/login/dashboard
 - Doctor application and admin approval/rejection
 - Patient appointment booking with approved doctor selection
-- Doctor appointment queue
-- Doctor discharge workflow
-- Invoice generation
+- Admin appointment approval/cancellation before doctor visit
+- Doctor appointment queue for approved assigned appointments
+- Doctor discharge workflow with validation
+- Invoice generation with unpaid/paid/waived payment status
+- Admin billing desk for collecting or waiving invoices
 - Prescription/diagnosis record creation during discharge
 - Patient invoice and prescription view
 - Patient report submission
@@ -28,7 +30,7 @@ Laravel migration notes are included for later learning, but the runnable app is
 - Password hashing with backward-compatible legacy password upgrade
 - Basic input validation and output escaping
 - Safer image uploads for profile photos
-- Modernized shared navigation/sidebar/card/table styling
+- Modernized home, login, dashboard, navigation, sidebar, card, form, and table styling
 - Future Laravel migration blueprint in `laravel-blueprint/`
 
 ## Technologies
@@ -176,17 +178,20 @@ The SQL dump uses hashed passwords, but these plain credentials still work.
 
 1. Patient creates an account or logs in.
 2. Patient books an appointment and selects an approved doctor.
-3. Doctor sees assigned pending appointments.
-4. Doctor checks appointment details.
-5. Doctor discharges the patient with:
+3. Admin reviews the request and approves or cancels the appointment.
+4. Doctor sees only assigned approved appointments.
+5. Doctor checks appointment details.
+6. Doctor discharges the patient with:
    - invoice fee
    - billing description
    - diagnosis
    - medicine/prescription
    - advice
    - optional follow-up date
-6. Patient views invoice and prescription details.
-7. Admin tracks appointments, income, reports, doctors, patients, and job requests.
+7. The system creates an unpaid invoice.
+8. Admin marks the invoice as paid, unpaid, or waived from the billing desk.
+9. Patient views invoice payment status and prescription details.
+10. Admin tracks appointments, billing, reports, doctors, patients, and job requests.
 
 ## Security Improvements
 
@@ -218,6 +223,8 @@ This is still a learning project. It is more realistic now, but a production HMS
 - CSRF tokens on all forms
 - More complete prepared-statement coverage
 - Dedicated departments, rooms, beds, staff, lab tests, and admissions
+- Appointment time slots and doctor availability calendars
+- Pharmacy, lab, and inventory modules
 - Pagination/search/filtering for large data
 - Better audit logs
 - Email/SMS notifications

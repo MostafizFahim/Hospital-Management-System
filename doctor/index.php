@@ -2,89 +2,113 @@
 session_start();
 include("../include/auth.php");
 require_login("doctor", "../doctorlogin.php");
- 
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Doctors Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Doctor Dashboard</title>
 </head>
 <body>
+<?php
+include("../include/header.php");
+include("../include/connection.php");
+include("sidenav.php");
 
-	<?php 
-		include("../include/header.php");
-		include("../include/connection.php");
-	?>
-	<div class="container-fluid">
-		<div class="col-md-12">
-			<div class="row">
-				<div class="col-md-2" style="margin-left: -30px;">
-					<?php
-					include("sidenav.php"); 
-					?>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="col-md-10">
-		<div class="container-fluid">
-			<h5>Doctor's Dashboard</h5>
-			<div class="col-md-12">
-				<div class="row">
-					<div class="col-md-3 my-2 bg-info mx-2" style="margin-left: 20px;">
-						<div class="col-md-12">
-							<div class="row">
-								<div class="col-md-8">
-									<h5 class="text-white my-4">My Profile</h5>
-								</div>
-								<div class="col-md-4"></div>
-								<a href="profile.php"><i class="fa fa-user-circle fa-3x my-4" style="color: white;"></i></a>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-3 my-2 bg-warning mx-2" style="margin-left: 20px;">
-						<div class="col-md-12">
-							<div class="row">
-								<div class="col-md-8">
-									<?php
-                                            $p = mysqli_query($connect,"SELECT * FROM 
-                                                patient");
+$doctor = $_SESSION['doctor'];
+$approvedQueue = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND status = 'Approved'", "s", $doctor);
+$pendingApproval = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND status = 'Pending'", "s", $doctor);
+$completedVisits = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE doctor_username = ? AND status = 'Discharged'", "s", $doctor);
+$patientCount = hms_count("SELECT COUNT(DISTINCT patient_username) AS total FROM appointment WHERE doctor_username = ?", "s", $doctor);
 
-                                            $pp = mysqli_num_rows($p);
+$todayStmt = mysqli_prepare($connect, "SELECT * FROM appointment WHERE doctor_username = ? AND appointment_date = CURDATE() ORDER BY date_booked ASC LIMIT 6");
+mysqli_stmt_bind_param($todayStmt, "s", $doctor);
+mysqli_stmt_execute($todayStmt);
+$todayAppointments = mysqli_stmt_get_result($todayStmt);
+?>
 
+<main class="col-md-10">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Clinical Workspace</p>
+            <h4>Doctor Dashboard</h4>
+        </div>
+        <a href="appointment.php" class="btn btn-primary"><i class="fas fa-stethoscope me-1"></i>Open queue</a>
+    </div>
 
-                                             ?>
-									<h5 class="text-white my-2" style="font-size: 30px;"><?php echo $pp;?></h5>
-									<h5 class="text-white">Total</h5>
-									<h5 class="text-white">Patient</h5>
-								</div>
-								<div class="col-md-4"></div>
-								<a href="patient.php"><i class="fa fa-procedures fa-3x my-4" style="color: white;"></i></a>
-							</div>
-						</div>
-					</div>
-					<div class="col-md-3 my-2 bg-success mx-2" style="margin-left: 20px;">
-						<div class="col-md-12">
-							<div class="row">
-								<div class="col-md-8">
-									<?php 
-									$app = mysqli_query($connect, "SELECT * FROM appointment ");
-									$appoint = mysqli_num_rows($app);
-									?>
-									<h5 class="text-white my-2" style="font-size:30px;"><?php echo $appoint; ?></h5>
-									<h5 class="text-white">Total</h5>
-									<h5 class="text-white">Appointment</h5>
-								</div>
-								<div class="col-md-4"></div>
-								<a href="appointment.php"><i class="fa fa-calendar fa-3x my-4" style="color: white;"></i></a>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <section class="hms-stat-grid">
+        <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Ready to check</p>
+                <h3><?php echo $approvedQueue; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-calendar-check"></i></span>
+        </a>
+        <div class="hms-card hms-stat">
+            <div>
+                <p>Awaiting admin</p>
+                <h3><?php echo $pendingApproval; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-hourglass-half"></i></span>
+        </div>
+        <div class="hms-card hms-stat">
+            <div>
+                <p>Completed visits</p>
+                <h3><?php echo $completedVisits; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-notes-medical"></i></span>
+        </div>
+        <a href="patient.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Your patients</p>
+                <h3><?php echo $patientCount; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-procedures"></i></span>
+        </a>
+    </section>
+
+    <div class="hms-card">
+        <div class="page-heading">
+            <div>
+                <p class="eyebrow">Today</p>
+                <h5>Appointment Schedule</h5>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Phone</th>
+                    <th>Symptoms</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if (mysqli_num_rows($todayAppointments) < 1) { ?>
+                    <tr><td colspan="5" class="hms-empty">No appointments scheduled for today.</td></tr>
+                <?php } ?>
+                <?php while ($row = mysqli_fetch_array($todayAppointments)) { ?>
+                    <tr>
+                        <td><?php echo e($row['firstname'] . ' ' . $row['surname']); ?></td>
+                        <td><?php echo e($row['phone']); ?></td>
+                        <td><?php echo e($row['symptoms']); ?></td>
+                        <td><span class="status-pill status-<?php echo hms_status_class($row['status']); ?>"><?php echo e($row['status']); ?></span></td>
+                        <td>
+                            <?php if ($row['status'] === 'Approved') { ?>
+                                <a href="discharge.php?id=<?php echo e($row['id']); ?>" class="btn btn-sm btn-primary">Check</a>
+                            <?php } else { ?>
+                                <span class="text-muted small">Waiting</span>
+                            <?php } ?>
+                        </td>
+                    </tr>
+                <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
 </body>
 </html>

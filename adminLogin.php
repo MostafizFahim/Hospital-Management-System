@@ -2,19 +2,17 @@
 session_start();
 include("include/connection.php");
 
-$error = array();
+$error = '';
 
 if (isset($_POST["login"])) {
     $username = trim($_POST["uname"] ?? '');
     $password = $_POST["pass"] ?? '';
 
     if ($username === '') {
-        $error['admin'] = "Enter Username";
+        $error = "Enter username.";
     } elseif ($password === '') {
-        $error["admin"] = "Enter Password";
-    }
-
-    if (count($error) === 0) {
+        $error = "Enter password.";
+    } else {
         $row = db_select_one("SELECT * FROM admin WHERE username = ? LIMIT 1", "s", $username);
 
         if ($row && password_matches($password, $row['password'])) {
@@ -28,44 +26,40 @@ if (isset($_POST["login"])) {
             exit();
         }
 
-        $error['admin'] = "Invalid Username or Password";
+        $error = "Invalid username or password.";
     }
 }
-
-$show = isset($error['admin']) ? "<h4 class='alert alert-danger'>" . e($error['admin']) . "</h4>" : "";
 ?>
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin Login</title>
 </head>
-<body style="background-image:url(img/back.jpg);background-repeat: no-repeat;background-size:cover;background-opacity:0;">
-    <?php include("include/header.php"); ?>
-    <div style="margin-top: 60px;"></div>
-    <div class="container">
-        <div class="col-md-12">
-            <div class="row">
-                <div class="col-md-3"></div>
-                <div class="col-md-6 jumbotron">
-                    <img src="img/adminLogin.png" style="width:100%" class="col-mg-6">
-                    <form method="post" class="my-2">
-                        <div><?php echo $show; ?></div>
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" name="uname" class="form-control" autocomplete="off" placeholder="Enter Username">
-                        </div>
-                        <br>
-                        <div class="form-group">
-                            <label>Password</label>
-                            <input type="password" name="pass" class="form-control" placeholder="Enter Password">
-                        </div>
-                        <br>
-                        <input type="submit" name="login" class="btn btn-success" value="Login">
-                    </form>
-                </div>
-                <div class="col-md-3"></div>
-            </div>
+<body>
+<?php include("include/header.php"); ?>
+<main class="hms-auth-shell">
+    <section class="hms-card hms-auth-card">
+        <div class="hms-auth-media" style="background-image: linear-gradient(rgba(17,24,39,.55), rgba(17,24,39,.72)), url('img/adminLogin.png');">
+            <p class="eyebrow text-white">Admin Workspace</p>
+            <h2 class="fw-bold">Manage appointments, staff, reports, and billing.</h2>
         </div>
-    </div>
+        <div class="hms-auth-form">
+            <h4 class="fw-bold mb-1">Admin Login</h4>
+            <p class="text-muted mb-4">Use your administrator account to continue.</p>
+            <?php if ($error) { ?><div class="hms-alert hms-alert-danger"><?php echo e($error); ?></div><?php } ?>
+            <form method="post">
+                <label>Username</label>
+                <input type="text" name="uname" class="form-control" autocomplete="off" placeholder="Enter username" required>
+
+                <label>Password</label>
+                <input type="password" name="pass" class="form-control" placeholder="Enter password" required>
+
+                <button type="submit" name="login" class="btn btn-primary w-100 mt-3"><i class="fas fa-sign-in-alt me-1"></i>Login</button>
+            </form>
+        </div>
+    </section>
+</main>
 </body>
 </html>

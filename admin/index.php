@@ -3,205 +3,175 @@ session_start();
 include("../include/auth.php");
 require_login("admin", "../adminLogin.php");
 ?>
-
-
-
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Admin Dashboard</title>
-        
-        
-    </head>
-    <body>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+<?php
+include("../include/header.php");
+include("../include/connection.php");
+include("sidenav.php");
 
-    <?php
-    include("../include/header.php");
+$adminCount = hms_count("SELECT COUNT(*) AS total FROM admin");
+$doctorCount = hms_count("SELECT COUNT(*) AS total FROM doctors WHERE status = 'Approved'");
+$patientCount = hms_count("SELECT COUNT(*) AS total FROM patient");
+$pendingAppointments = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status = 'Pending'");
+$approvedToday = hms_count("SELECT COUNT(*) AS total FROM appointment WHERE status = 'Approved' AND appointment_date = CURDATE()");
+$pendingJobs = hms_count("SELECT COUNT(*) AS total FROM doctors WHERE status = 'Pending'");
+$unpaidInvoices = hms_count("SELECT COUNT(*) AS total FROM income WHERE payment_status = 'Unpaid'");
+$incomeRow = db_select_one("SELECT COALESCE(SUM(GREATEST(amount_paid - waived_amount, 0)), 0) AS total FROM income WHERE payment_status = 'Paid'");
+$waivedRow = db_select_one("SELECT COALESCE(SUM(waived_amount), 0) AS total FROM income");
+$paidIncome = (float) ($incomeRow['total'] ?? 0);
+$waivedIncome = (float) ($waivedRow['total'] ?? 0);
 
-    include("../include/connection.php");
-    ?>
+$todayAppointments = mysqli_query($connect, "SELECT * FROM appointment WHERE appointment_date = CURDATE() AND status = 'Approved' ORDER BY date_booked DESC LIMIT 6");
+$billingQueue = mysqli_query($connect, "SELECT * FROM income WHERE payment_status = 'Unpaid' ORDER BY date_discharge DESC LIMIT 6");
+?>
 
-    <div class = "container-fluid">
-        <div class="col-md-12">
-            <div class="row">
-                <div class="col-md-2" style="margin-left:-30px;">
-                    <?php
-                    include("sidenav.php");
-                    ?>
-                </div>
-                
-               
-            </div>
-
+<main class="col-md-10">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Control Center</p>
+            <h4>Admin Dashboard</h4>
         </div>
-    
+        <div class="hms-actions">
+            <a href="appointment.php" class="btn btn-primary"><i class="fas fa-calendar-check me-1"></i>Manage appointments</a>
+            <a href="income.php" class="btn btn-outline-primary"><i class="fas fa-file-invoice-dollar me-1"></i>Billing</a>
+        </div>
     </div>
-    <div class="col-md-10">
-        <h4 class="my-2">Admin dashboard</h4>
-                    <div class="col-md-12 my-1">
-                        <div class="row">
-                            <div class="col-md-3 bg-success mx-2 " style="height: 130px;">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                            <?php
-                                              $ad =mysqli_query($connect,"SELECT * FROM admin");
-                                              $num = mysqli_num_rows($ad);
-                                            ?>
-                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo $num; ?></h5>
-                                            <h5 class="text-white">Total</h5>
-                                            <h5 class="text-white">Admin</h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="admin.php"><i class="fa fa-users-cog fa-3x my- 4" style="color: black;"></i></a>
 
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 bg-info mx-2" style="height: 130px;">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                            <?php
+    <section class="hms-stat-grid">
+        <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Pending appointments</p>
+                <h3><?php echo $pendingAppointments; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-calendar-plus"></i></span>
+        </a>
+        <a href="appointment.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Approved today</p>
+                <h3><?php echo $approvedToday; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-calendar-day"></i></span>
+        </a>
+        <a href="income.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Unpaid invoices</p>
+                <h3><?php echo $unpaidInvoices; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-receipt"></i></span>
+        </a>
+        <a href="income.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Collected income</p>
+                <h3><?php echo hms_money($paidIncome); ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-money-check-alt"></i></span>
+        </a>
+        <a href="doctor.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Approved doctors</p>
+                <h3><?php echo $doctorCount; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-user-md"></i></span>
+        </a>
+        <a href="patient.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Registered patients</p>
+                <h3><?php echo $patientCount; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-procedures"></i></span>
+        </a>
+        <a href="job_request.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Doctor requests</p>
+                <h3><?php echo $pendingJobs; ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-clipboard-list"></i></span>
+        </a>
+        <a href="admin.php" class="hms-card hms-stat text-decoration-none text-reset">
+            <div>
+                <p>Waived bills</p>
+                <h3><?php echo hms_money($waivedIncome); ?></h3>
+            </div>
+            <span class="hms-stat-icon"><i class="fas fa-hand-holding-heart"></i></span>
+        </a>
+    </section>
 
-                                                $doctor = mysqli_query($connect,"SELECT * FROM doctors WHERE status='Approved'");
-                                                $num2 = mysqli_num_rows($doctor)
-
-                                            ?>
-                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo $num2;?></h5>
-                                            <h5 class="text-white">Total</h5>
-                                            <h5 class="text-white">Doctor</h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="doctor.php"><i class="fa fa-user-md fa-3x my- 4" style="color: black;"></i></a>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                            <div class="col-md-3 bg-warning mx-2" style="height: 130px;">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                            <?php
-                                            $p = mysqli_query($connect,"SELECT * FROM 
-                                                patient");
-
-                                            $pp = mysqli_num_rows($p);
-
-
-                                             ?>
-                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo $pp; ?></h5>
-                                            <h5 class="text-white">Total</h5>
-                                            <h5 class="text-white">Patient</h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="patient.php"><i class="fa fa-procedures fa-3x my- 4" style="color: black;"></i></a>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                            <div class="col-md-3 bg-info mx-2 my-2" style="height: 130px;">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                            <?php
-                                            $appointments = mysqli_query($connect,"SELECT * FROM appointment WHERE status='Pending'");
-                                            $appointmentCount = mysqli_num_rows($appointments);
-                                            ?>
-                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo $appointmentCount; ?></h5>
-                                            <h5 class="text-white">Pending</h5>
-                                            <h5 class="text-white">Appointments</h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="appointment.php"><i class="fa fa-calendar-check fa-3x my- 4" style="color: black;"></i></a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 bg-warning mx-2 my-2" style="height: 130px;">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                           <?php
-                                            $re = mysqli_query($connect,"SELECT * FROM 
-                                                report");
-
-                                            $rep = mysqli_num_rows($re);
-
-
-                                             ?>
-                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo $rep; ?></h5>
-                                            <h5 class="text-white">Total</h5>
-                                            <h5 class="text-white">Report</h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="report.php"><i class="fa fa-flag fa-3x my- 4" style="color: black;"></i></a>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                            <div class="col-md-3 bg-danger mx-2 my-2" style="height: 130px;">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                            <?php
-
-                                            $job = mysqli_query($connect,"SELECT * FROM doctors WHERE status='Pending'");
-                                            $num1 = mysqli_num_rows($job);
-
-                                            ?>
-                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo $num1; ?></h5>
-                                            <h5 class="text-white">Total</h5>
-                                            <h5 class="text-white">Job Request</h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="job_request.php"><i class="fa fa-book-open fa-3x my- 4" style="color: black;"></i></a>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                            <div class="col-md-3 bg-success mx-2 my-2" style="height: 130px;">
-                                <div class="col-md-12">
-                                    <div class="row">
-                                        <div class="col-md-9">
-                                            <?php
-
-                                            $in = mysqli_query($connect,"SELECT sum(amount_paid) as profit FROM income");
-                                            $inc =mysqli_fetch_array($in);
-
-                                            ?>
-                                            <h5 class="my-2 text-white " style="font-size: 30px;"><?php echo "$" . $inc['profit']; ?></h5>
-                                            <h5 class="text-white">Total</h5>
-                                            <h5 class="text-white">Income</h5>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <a href="income.php"><i class="fa fa-money-check-alt fa-3x my- 4" style="color: black;"></i></a>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                            </div>
-
-                        </div>
-                     </div>
+    <section class="hms-section-grid">
+        <div class="hms-card">
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">Today</p>
+                    <h5>Approved Schedule</h5>
+                </div>
+                <a href="appointment.php" class="btn btn-sm btn-outline-primary">View all</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (mysqli_num_rows($todayAppointments) < 1) { ?>
+                        <tr><td colspan="4" class="hms-empty">No approved appointments scheduled for today.</td></tr>
+                    <?php } ?>
+                    <?php while ($row = mysqli_fetch_array($todayAppointments)) { ?>
+                        <tr>
+                            <td><?php echo e($row['firstname'] . ' ' . $row['surname']); ?></td>
+                            <td><?php echo e($row['doctor_username'] ?: 'Unassigned'); ?></td>
+                            <td><?php echo e($row['phone']); ?></td>
+                            <td><span class="status-pill status-<?php echo hms_status_class($row['status']); ?>"><?php echo e($row['status']); ?></span></td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    
 
-     
-    </body>
+        <div class="hms-card">
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">Billing</p>
+                    <h5>Payment Queue</h5>
+                </div>
+                <a href="income.php" class="btn btn-sm btn-outline-primary">Open</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (mysqli_num_rows($billingQueue) < 1) { ?>
+                        <tr><td colspan="3" class="hms-empty">No unpaid invoices waiting.</td></tr>
+                    <?php } ?>
+                    <?php while ($row = mysqli_fetch_array($billingQueue)) { ?>
+                        <tr>
+                            <td><?php echo e($row['patient']); ?></td>
+                            <td><?php echo hms_money(hms_invoice_due($row)); ?></td>
+                            <td><span class="status-pill status-<?php echo hms_status_class($row['payment_status']); ?>"><?php echo e($row['payment_status']); ?></span></td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
 </html>

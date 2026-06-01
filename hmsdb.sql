@@ -105,6 +105,9 @@ CREATE TABLE `income` (
   `appointment_id` int(100) NOT NULL,
   `date_discharge` varchar(100) NOT NULL,
   `amount_paid` decimal(10,2) NOT NULL,
+  `waived_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_status` varchar(30) NOT NULL DEFAULT 'Unpaid',
+  `paid_at` varchar(100) DEFAULT NULL,
   `description` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -165,7 +168,7 @@ CREATE TABLE `patient` (
 --
 
 INSERT INTO `patient` (`id`, `firstname`, `surname`, `username`, `email`, `phone`, `gender`, `country`, `password`, `date_reg`, `profile`) VALUES
-(5, 'asad', 'a', 'jaman', 'a@gmail.com', '0178659562', 'Male', 'Bangladesh', '$2y$10$b/Ekk1TfGQucTcd31BHDLu6dIwLExnyw9/vc9OGPzqj9oCFuo9Koi', '2024-01-30 04:00:28', 'patient.jpg');
+(5, 'asad', 'a', 'jaman', 'a@gmail.com', '0178659562', 'Male', 'Bangladesh', '$2y$10$b/Ekk1TfGQucTcd31BHDLu6dIwLExnyw9/vc9OGPzqj9oCFuo9Koi', '2024-01-30 04:00:28', 'patient.jpg.jpg');
 
 --
 -- Indexes for dumped tables

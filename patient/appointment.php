@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 include("../include/auth.php");
@@ -7,105 +6,146 @@ require_login("patient", "../patientlogin.php");
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Book Appointment</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Book Appointment</title>
 </head>
 <body>
-	<?php
-	include("../include/header.php");
-	include("../include/connection.php");
-	?>
+<?php
+include("../include/header.php");
+include("../include/connection.php");
+include("sidenav.php");
 
-	<div class="container-fluid">
-		<div class="col-md-12">
-			<div class="row">
-				<div class="col-md-2" style="margin-Left: -30px;">
-					<?php
-					include("sidenav.php");
-					?>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="col-md-10">
-		<h5 class="text-center my-2">Book Appointment</h5>
-		<?php
-			
-			
-				$pat = $_SESSION['patient'];
-				$row = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $pat);
-				
-				$firstname = $row['firstname'];
-				$surname = $row['surname'];
-				$gender = $row['gender'];
-				$phone = $row['phone'];
-				$patient_username = $row['username'];
-				$doctors = mysqli_query($connect, "SELECT username, firstname, surname FROM doctors WHERE status='Approved' ORDER BY firstname ASC");
+$message = '';
+$error = '';
+$pat = $_SESSION['patient'];
+$patient = db_select_one("SELECT * FROM patient WHERE username = ? LIMIT 1", "s", $pat);
+$doctors = mysqli_query($connect, "SELECT username, firstname, surname FROM doctors WHERE status = 'Approved' ORDER BY firstname ASC");
 
-				
-				
-					
-					
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $date = trim($_POST['date'] ?? '');
+    $doctorUsername = trim($_POST['doctor'] ?? '');
+    $symptoms = trim($_POST['sym'] ?? '');
 
-					if(isset($_POST['book'])){
-						
-						$date = trim($_POST['date'] ?? '');
-						$doctor_username = trim($_POST['doctor'] ?? '');
-						$sym = trim($_POST['sym'] ?? '');
+    if ($date === '') {
+        $error = "Select appointment date.";
+    } elseif ($doctorUsername === '') {
+        $error = "Select a doctor.";
+    } elseif ($symptoms === '') {
+        $error = "Enter symptoms.";
+    } elseif ($date < date('Y-m-d')) {
+        $error = "Appointment date cannot be in the past.";
+    } else {
+        $doctor = db_select_one("SELECT username FROM doctors WHERE username = ? AND status = 'Approved' LIMIT 1", "s", $doctorUsername);
+        $duplicate = db_select_one(
+            "SELECT id FROM appointment WHERE patient_username = ? AND doctor_username = ? AND appointment_date = ? AND status IN ('Pending', 'Approved') LIMIT 1",
+            "sss",
+            $pat,
+            $doctorUsername,
+            $date
+        );
 
-						if(empty($date)){
-							echo "<script>alert('Select appointment date')</script>";
-						}else if(empty($doctor_username)){
-							echo "<script>alert('Select a doctor')</script>";
-						}else if(empty($sym)){
-							echo "<script>alert('Enter symptoms')</script>";
-						}else if($date < date('Y-m-d')){
-							echo "<script>alert('Appointment date cannot be in the past')</script>";
-						} else {
-							$doctor = db_select_one("SELECT username FROM doctors WHERE username = ? AND status='Approved' LIMIT 1", "s", $doctor_username);
-							if (!$doctor) {
-								echo "<script>alert('Selected doctor is not available')</script>";
-							} else {
-								$res = db_execute("INSERT INTO appointment(patient_username, doctor_username, firstname, surname, gender, phone, appointment_date, symptoms, status, date_booked) VALUES(?,?,?,?,?,?,?,?,'Pending',NOW())", "ssssssss", $patient_username, $doctor_username, $firstname, $surname, $gender, $phone, $date, $sym);
+        if (!$doctor) {
+            $error = "Selected doctor is not available.";
+        } elseif ($duplicate) {
+            $error = "You already have an active appointment with this doctor on that date.";
+        } else {
+            $created = db_execute(
+                "INSERT INTO appointment(patient_username, doctor_username, firstname, surname, gender, phone, appointment_date, symptoms, status, date_booked) VALUES(?,?,?,?,?,?,?,?,'Pending',NOW())",
+                "ssssssss",
+                $patient['username'],
+                $doctorUsername,
+                $patient['firstname'],
+                $patient['surname'],
+                $patient['gender'],
+                $patient['phone'],
+                $date,
+                $symptoms
+            );
 
-								if($res){
-									echo "<script>alert('You have booked an appointment')</script>";
-								}
-							}
-						}
-					}
-				 
-				
-			
-			
-		?>
-		<div class="col-md-12">
-			<div class="row">
-				<div class="col-md-3"></div>
-				<div class="col-md-6 card ">
-					<form method="post">
-						<label>Appointment Date</label>
-						<input type="date" name="date" class="form-control">
+            $message = $created ? "Appointment request sent. Admin confirmation is required before the doctor can check it." : "Could not book appointment.";
+        }
+    }
+}
 
-						<label>Doctor</label>
-						<select name="doctor" class="form-control">
-							<option value="">Select Doctor</option>
-							<?php while($doctor = mysqli_fetch_array($doctors)){ ?>
-								<option value="<?php echo e($doctor['username']); ?>">
-									Dr. <?php echo e($doctor['firstname'] . ' ' . $doctor['surname']); ?>
-								</option>
-							<?php } ?>
-						</select>
+$myAppointmentsStmt = mysqli_prepare($connect, "SELECT * FROM appointment WHERE patient_username = ? ORDER BY appointment_date DESC, date_booked DESC LIMIT 8");
+mysqli_stmt_bind_param($myAppointmentsStmt, "s", $pat);
+mysqli_stmt_execute($myAppointmentsStmt);
+$myAppointments = mysqli_stmt_get_result($myAppointmentsStmt);
+?>
 
-						<label>Symptoms</label>
-						<input type="text" name="sym" class="form-control" autocomplete="off" placeholder="Enter Symptoms">
-						<input type="submit" name="book" class="btn btn-info my-2" value="Book Appointment">
-					</form>
-				</div>
-				<div class="col-md-3"></div>
-			</div>
-		</div>
-	</div>
+<main class="col-md-10">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">Patient Desk</p>
+            <h4>Book Appointment</h4>
+        </div>
+    </div>
+
+    <?php if ($message) { ?><div class="hms-alert hms-alert-success"><?php echo e($message); ?></div><?php } ?>
+    <?php if ($error) { ?><div class="hms-alert hms-alert-danger"><?php echo e($error); ?></div><?php } ?>
+
+    <section class="hms-section-grid">
+        <div class="hms-card">
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">Request</p>
+                    <h5>New Appointment</h5>
+                </div>
+            </div>
+            <form method="post">
+                <label>Appointment Date</label>
+                <input type="date" name="date" class="form-control" min="<?php echo date('Y-m-d'); ?>" required>
+
+                <label>Doctor</label>
+                <select name="doctor" class="form-select" required>
+                    <option value="">Select Doctor</option>
+                    <?php while ($doctor = mysqli_fetch_array($doctors)) { ?>
+                        <option value="<?php echo e($doctor['username']); ?>">
+                            Dr. <?php echo e($doctor['firstname'] . ' ' . $doctor['surname']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+
+                <label>Symptoms</label>
+                <textarea name="sym" class="form-control" rows="4" autocomplete="off" placeholder="Describe the main problem, duration, and severity" required></textarea>
+
+                <button type="submit" name="book" class="btn btn-primary mt-3"><i class="fas fa-calendar-plus me-1"></i>Send request</button>
+            </form>
+        </div>
+
+        <div class="hms-card">
+            <div class="page-heading">
+                <div>
+                    <p class="eyebrow">History</p>
+                    <h5>Recent Appointments</h5>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Doctor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <?php if (mysqli_num_rows($myAppointments) < 1) { ?>
+                        <tr><td colspan="3" class="hms-empty">No appointments yet.</td></tr>
+                    <?php } ?>
+                    <?php while ($row = mysqli_fetch_array($myAppointments)) { ?>
+                        <tr>
+                            <td><?php echo e($row['appointment_date']); ?></td>
+                            <td><?php echo e($row['doctor_username']); ?></td>
+                            <td><span class="status-pill status-<?php echo hms_status_class($row['status']); ?>"><?php echo e($row['status']); ?></span></td>
+                        </tr>
+                    <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
 </body>
 </html>
